@@ -1,0 +1,2745 @@
+/*
+ * bloclibre — Éditeur statique de pages par blocs.
+ * Copyright (c) 2026 bloclibre contributors · Licence MIT.
+ * JavaScript natif : aucune dépendance, aucun appel réseau, aucun traceur.
+ */
+(() => {
+  "use strict";
+
+  // ── Icônes originales : traits SVG, intégrés à l’application ─────────────────
+  const PATHS = {
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    close: '<path d="m6 6 12 12M18 6 6 18"/>',
+    chevronDown: '<path d="m7 10 5 5 5-5"/>',
+    chevronRight: '<path d="m9 6 6 6-6 6"/>',
+    arrowRight: '<path d="M4 12h15m-5-5 5 5-5 5"/>',
+    arrowUp: '<path d="M12 20V4m-6 6 6-6 6 6"/>',
+    arrowDown: '<path d="M12 4v16m-6-6 6 6 6-6"/>',
+    undo: '<path d="M8 5 3 10l5 5M3 10h10a7 7 0 0 1 7 7v2"/>',
+    redo: '<path d="m16 5 5 5-5 5m5-5H11a7 7 0 0 0-7 7v2"/>',
+    search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+    code: '<path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18"/>',
+    download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/>',
+    upload: '<path d="M12 16V3m-5 5 5-5 5 5M4 16v4h16v-4"/>',
+    desktop:
+      '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/>',
+    tablet:
+      '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/>',
+    smartphone:
+      '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+    type: '<path d="M4 6V3h16v3M12 3v18m-4 0h8"/>',
+    paragraph: '<path d="M13 21V3h5M8 3h10M8 3a5 5 0 0 0 0 10h5M17 3v18"/>',
+    image:
+      '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5L5 21"/>',
+    button:
+      '<rect x="2" y="7" width="20" height="10" rx="3"/><path d="M7 12h7m-2-2 2 2-2 2"/>',
+    columns:
+      '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/>',
+    section:
+      '<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3"/><path d="M8 12h8m-4-4v8"/>',
+    divider: '<path d="M3 12h18M7 5h10M7 19h10"/>',
+    spacer: '<path d="M4 3h16M4 21h16m-8-4V7m-3 3 3-3 3 3m-6 4 3 3 3-3"/>',
+    list: '<path d="M9 5h12M9 12h12M9 19h12M3 5h.01M3 12h.01M3 19h.01"/>',
+    quote: '<path d="M10 5H4v7h5c0 4-2 5-5 6m16-13h-6v7h5c0 4-2 5-5 6"/>',
+    navigation:
+      '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M5 7.5h3m6 0h1m3 0h1"/>',
+    card: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 8h3m-3 4h10m-10 4h7"/>',
+    layers:
+      '<path d="m12 2 10 6-10 6L2 8l10-6Zm-10 10 10 6 10-6M2 16l10 6 10-6"/>',
+    sliders:
+      '<path d="M4 6h7m4 0h5M4 18h3m4 0h9M9 4v4m4 8v4M4 12h11m4 0h1m-3-2v4"/>',
+    trash: '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+    copy: '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/>',
+    check: '<path d="m5 12 4 4L19 6"/>',
+    checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+    shield:
+      '<path d="M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6l-9-4Z"/><path d="m8 12 3 3 5-6"/>',
+    unlock:
+      '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0m-4 8v3"/>',
+    keyboard:
+      '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.1M10 9h.1M14 9h.1M18 9h.1M6 12h.1M10 12h.1M14 12h.1M18 12h.1M7 15h10"/>',
+    mouse:
+      '<rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 2v7M6 10h12"/>',
+    sparkles:
+      '<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Zm7-1v4m-2-2h4M3 18v4m-2-2h4"/>',
+    fit: '<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/>',
+    alignLeft: '<path d="M3 5h18M3 10h12M3 15h18M3 20h12"/>',
+    alignCenter: '<path d="M3 5h18M6 10h12M3 15h18M6 20h12"/>',
+    alignRight: '<path d="M3 5h18M9 10h12M3 15h18M9 20h12"/>',
+    panelLeft:
+      '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18m6-11v4m-2-2h4"/>',
+    grip: '<path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke-width="3"/>',
+    folder: '<path d="M3 7V4h6l3 3h9v13H3V7Z"/>',
+    external: '<path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7"/>',
+    heart:
+      '<path d="M20.5 4.5a5 5 0 0 0-7 0L12 6l-1.5-1.5a5 5 0 0 0-7 7L12 21l8.5-9.5a5 5 0 0 0 0-7Z"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/>',
+    globe:
+      '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
+  };
+  const icon = (name, cls = "") =>
+    `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[name] || PATHS.section}</svg>`;
+  const $ = (s, root = document) => root.querySelector(s);
+  const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+  const esc = (value) =>
+    String(value ?? "").replace(
+      /[&<>"']/g,
+      (char) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[char],
+    );
+  const clamp = (value, min, max, fallback = min) =>
+    Number.isFinite(Number(value))
+      ? Math.min(max, Math.max(min, Number(value)))
+      : fallback;
+  const uid = () =>
+    `b-${globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2, 9)}`;
+  const color = (value, fallback = "") =>
+    /^#[0-9a-f]{6}$/i.test(value || "") ? value : fallback;
+  const slug = (value) =>
+    String(value)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "mon-site";
+  // Une instance par chemin : plusieurs dépôts GitHub Pages ne s’écrasent pas.
+  const STORAGE_KEY = `bloclibre.project.v1:${location.pathname.replace(/index\.html$/i, "").replace(/\/$/, "") || "/"}`;
+  const MIME = "application/x-bloclibre-block";
+  const WIDTHS = { desktop: 1120, tablet: 768, mobile: 390 };
+  const FONTS = {
+    sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+    serif: 'Georgia, "Times New Roman", serif',
+    mono: "ui-monospace, SFMono-Regular, Consolas, monospace",
+  };
+
+  // ── Illustrations vectorielles originales, incluses aussi dans les exports ──
+  const ART_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="610" viewBox="0 0 1440 610">
+  <defs><linearGradient id="wall" x2="1" y2="1"><stop stop-color="#e9e7d5"/><stop offset="1" stop-color="#d3d5b9"/></linearGradient><linearGradient id="arch" x2="1"><stop stop-color="#c3bba4"/><stop offset="1" stop-color="#e1dac5"/></linearGradient><linearGradient id="floor" x2="0" y2="1"><stop stop-color="#e0cdb2"/><stop offset="1" stop-color="#c4b89b"/></linearGradient><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".09"/></feComponentTransfer><feBlend in="SourceGraphic" mode="multiply"/></filter></defs>
+  <g filter="url(#grain)"><path fill="url(#wall)" d="M0 0h1440v610H0z"/><circle cx="320" cy="172" r="102" fill="#bb7855"/><path fill="#79836a" d="M0 321q240-157 480 22t530-20 430 0v287H0Z"/><path d="M834 0h606v610H834Z" fill="#eee8d8"/><path d="M927 610V242a155 155 0 0 1 310 0v368Z" fill="url(#arch)"/><path d="M980 610V252a102 102 0 0 1 204 0v358Z" fill="#697460"/><path d="M1009 610V262a82 82 0 0 1 164 0v348Z" fill="#a8b09a"/><path d="M1009 418q82-36 164 0v192h-164Z" fill="#7c8a6b"/><path d="M834 491 1440 414v196H385Z" fill="url(#floor)"/><path d="m1238 610-254-147 36-11 330 158Z" fill="#b5ad8e" opacity=".4"/><path d="m0 488 834-76v198H0Z" fill="#c4c4a6"/><path d="m88 487 746-75v22L88 510Z" fill="#ebe6d2"/><path d="m88 510 746-76v22L88 533Z" fill="#9aa080"/><path d="M556 540V291a90 90 0 0 1 180 0v231Z" fill="#f3eddd"/><path d="M580 539V302a67 67 0 0 1 134 0v223Z" fill="#b5b99d"/><path d="M604 537V315a43 43 0 0 1 86 0v213Z" fill="#7b876b"/><ellipse cx="380" cy="548" rx="121" ry="15" fill="#8d9475" opacity=".22"/><path d="M315 473h100l-13 81h-74Z" fill="#b47856"/><path d="M365 490V287m0 125q-83-14-69-83 82 11 69 83Zm0-47q68-8 68-73-71 2-68 73Zm0-41q-51-31-24-83 52 24 24 83Z" fill="#455e46"/><path d="M0 610V442q80-127 172 0 94-53 137 73t161 95Z" fill="#576b50"/><path d="M0 610v-85q51-79 102-25t102 110Z" fill="#73845d"/><path d="M1320 610v-98q21-88 67-136 27 56-6 134 33-27 59-27v127Z" fill="#778260"/><path d="M0 0h24v610H0Z" fill="#e3e2cf"/></g></svg>`;
+  const ART = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(ART_SVG)}`;
+  const PLACEHOLDER = `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="520" viewBox="0 0 1000 520"><rect width="1000" height="520" rx="12" fill="#edf0e7"/><circle cx="640" cy="170" r="58" fill="#c3d1b7"/><path d="m150 420 250-250 170 170 100-100 180 180Z" fill="#acbea0"/><path d="m150 420 250-250 170 250Z" fill="#d3deca"/></svg>')}`;
+
+  // ── Modèle de données ─────────────────────────────────────────────────────
+  const COMMON = {
+    name: "",
+    anchor: "",
+    align: "left",
+    color: "",
+    background: "",
+    paddingTop: 0,
+    paddingBottom: 0,
+    marginTop: 0,
+    marginBottom: 16,
+  };
+  const TYPES = {
+    heading: {
+      label: "Titre",
+      icon: "type",
+      group: "essentials",
+      desc: "Donnez du relief à vos idées.",
+      props: {
+        text: "Un titre qui vous ressemble",
+        level: 2,
+        fontSize: 40,
+        font: "inherit",
+        bold: true,
+        italic: false,
+        lineHeight: 1.15,
+        letterSpacing: -1,
+        maxWidth: 0,
+      },
+    },
+    paragraph: {
+      label: "Texte",
+      icon: "paragraph",
+      group: "essentials",
+      desc: "Les bons mots, au bon endroit.",
+      props: {
+        text: "Tout commence par une idée. Racontez votre histoire et donnez envie d’en découvrir davantage.",
+        fontSize: 17,
+        font: "inherit",
+        bold: false,
+        italic: false,
+        lineHeight: 1.8,
+        letterSpacing: 0,
+        maxWidth: 0,
+      },
+    },
+    image: {
+      label: "Image",
+      icon: "image",
+      group: "essentials",
+      desc: "Une image vaut mille mots.",
+      props: {
+        src: PLACEHOLDER,
+        alt: "Illustration de montagnes",
+        caption: "",
+        height: 320,
+        radius: 10,
+        fit: "cover",
+      },
+    },
+    button: {
+      label: "Bouton",
+      icon: "button",
+      group: "essentials",
+      desc: "Invitez à passer à l’action.",
+      props: {
+        text: "En savoir plus  ↗",
+        href: "#contact",
+        newTab: false,
+        variant: "filled",
+        radius: 6,
+        fontSize: 14,
+      },
+    },
+    section: {
+      label: "Section",
+      icon: "section",
+      group: "layout",
+      desc: "Rassemblez et organisez vos blocs.",
+      props: { paddingTop: 40, paddingBottom: 40, marginBottom: 0, gap: 0 },
+    },
+    columns: {
+      label: "Colonnes",
+      icon: "columns",
+      group: "layout",
+      desc: "Composez côte à côte. Sur mobile, tout s’empile.",
+      props: { count: 2, gap: 28, verticalAlign: "start" },
+    },
+    divider: {
+      label: "Séparateur",
+      icon: "divider",
+      group: "layout",
+      desc: "Un peu de structure, en toute simplicité.",
+      props: {
+        thickness: 1,
+        style: "solid",
+        color: "#dfe5d6",
+        marginTop: 20,
+        marginBottom: 20,
+      },
+    },
+    spacer: {
+      label: "Espacement",
+      icon: "spacer",
+      group: "layout",
+      desc: "Laissez respirer votre page.",
+      props: { height: 48, marginBottom: 0 },
+    },
+    list: {
+      label: "Liste",
+      icon: "list",
+      group: "more",
+      desc: "Allez à l’essentiel, point par point.",
+      props: {
+        text: "Une première belle idée\nUn détail qui fait la différence\nEt tout le reste à inventer",
+        ordered: false,
+        fontSize: 17,
+      },
+    },
+    quote: {
+      label: "Citation",
+      icon: "quote",
+      group: "more",
+      desc: "Des mots qui méritent une place à part.",
+      props: {
+        text: "La simplicité est la sophistication suprême.",
+        author: "Léonard de Vinci",
+        fontSize: 27,
+      },
+    },
+    card: {
+      label: "Carte",
+      icon: "card",
+      group: "more",
+      desc: "Mettez un service ou une idée en lumière.",
+      props: {
+        symbol: "✳",
+        title: "Le sens du détail",
+        text: "Une approche attentive, du premier échange à la dernière finition.",
+        radius: 12,
+        background: "#f4f6ef",
+        paddingTop: 28,
+        paddingBottom: 28,
+      },
+    },
+    navigation: {
+      label: "Navigation",
+      icon: "navigation",
+      group: "more",
+      desc: "Un repère pour explorer votre page.",
+      props: {
+        brand: "mon site.",
+        text: "À propos|#apropos\nNos projets|#projets\nContact ↗|#contact",
+        fontSize: 24,
+        paddingTop: 22,
+        paddingBottom: 22,
+        marginBottom: 0,
+      },
+    },
+    html: {
+      label: "HTML libre",
+      icon: "code",
+      group: "more",
+      desc: "Ajoutez votre propre balisage, sans scripts.",
+      props: {
+        html: "<p>Un petit morceau de <strong>HTML libre</strong>.</p>",
+      },
+    },
+  };
+  const GROUPS = [
+    { id: "essentials", label: "LES ESSENTIELS" },
+    { id: "layout", label: "MISE EN PAGE" },
+    { id: "more", label: "POUR ALLER PLUS LOIN" },
+  ];
+  function block(type, props = {}, children) {
+    const b = {
+      id: uid(),
+      type,
+      props: { ...COMMON, ...TYPES[type].props, ...props },
+    };
+    if (["section", "buttons"].includes(type)) b.children = children || [];
+    if (type === "columns")
+      b.children =
+        children ||
+        Array.from({ length: b.props.count }, () =>
+          block("section", {
+            paddingTop: 0,
+            paddingBottom: 0,
+            marginBottom: 0,
+          }),
+        );
+    return b;
+  }
+  const baseDocument = () => ({
+    version: 1,
+    title: "Mon premier site",
+    description: "Un site imaginé et créé avec bloclibre.",
+    settings: {
+      font: "sans",
+      accent: "#38654b",
+      background: "#faf9f6",
+      text: "#25332d",
+      width: 1040,
+    },
+    blocks: [],
+  });
+  function starter(name = "atelier") {
+    const d = baseDocument();
+    if (name === "blank") {
+      d.title = "Sans titre";
+      d.description = "";
+      return d;
+    }
+    if (name === "portfolio") {
+      d.title = "Portfolio indépendant";
+      d.settings = {
+        font: "sans",
+        accent: "#d7dfa4",
+        background: "#293145",
+        text: "#f0f0e4",
+        width: 1040,
+      };
+      d.blocks = [
+        block("navigation", {
+          brand: "alex. design",
+          text: "Mon travail|#projets\nÀ propos|#apropos\nÉchangeons ↗|mailto:bonjour@example.com",
+        }),
+        block(
+          "section",
+          { paddingTop: 72, paddingBottom: 72, anchor: "apropos" },
+          [
+            block("paragraph", {
+              text: "DESIGNER INDÉPENDANT · MARSEILLE",
+              fontSize: 11,
+              letterSpacing: 2,
+              color: "#bec9b1",
+              marginBottom: 24,
+            }),
+            block("heading", {
+              text: "Les idées prennent\nune autre dimension.",
+              level: 1,
+              fontSize: 74,
+              font: "serif",
+              bold: false,
+              marginBottom: 25,
+            }),
+            block("paragraph", {
+              text: "J’imagine des identités et des expériences numériques qui allient le beau à l’utile.",
+              maxWidth: 540,
+              fontSize: 18,
+              color: "#c4cbbc",
+              marginBottom: 30,
+            }),
+            block("button", {
+              text: "Explorer mes projets  ↗",
+              href: "#projets",
+              radius: 30,
+            }),
+          ],
+        ),
+        block("image", {
+          src: ART,
+          alt: "Composition architecturale aux couleurs naturelles",
+          height: 410,
+          radius: 4,
+          anchor: "projets",
+          marginBottom: 60,
+        }),
+        block("section", { paddingTop: 32, paddingBottom: 70 }, [
+          block("heading", {
+            text: "Chaque détail compte.",
+            fontSize: 42,
+            font: "serif",
+            bold: false,
+          }),
+          block("paragraph", {
+            text: "Identité visuelle, direction artistique et design web : une vision d’ensemble, une attention singulière.",
+            fontSize: 18,
+            maxWidth: 700,
+          }),
+        ]),
+        block("navigation", {
+          brand: "À bientôt.",
+          text: "Écrivez-moi ↗|mailto:bonjour@example.com",
+          background: "#222a3b",
+          anchor: "contact",
+        }),
+      ];
+      return d;
+    }
+    if (name === "launch") {
+      d.title = "Une belle idée à lancer";
+      d.settings = {
+        font: "sans",
+        accent: "#626b4d",
+        background: "#f8efe4",
+        text: "#533f43",
+        width: 1040,
+      };
+      d.blocks = [
+        block("navigation", {
+          brand: "morrow.",
+          text: "La philosophie|#philosophie\nDécouvrir|#decouvrir\nNous écrire ↗|#contact",
+        }),
+        block(
+          "section",
+          { paddingTop: 64, paddingBottom: 52, anchor: "philosophie" },
+          [
+            block("paragraph", {
+              text: "PENSÉ POUR LES JOURS QUI COMPTENT",
+              align: "center",
+              fontSize: 11,
+              letterSpacing: 2,
+              marginBottom: 22,
+            }),
+            block("heading", {
+              text: "Moins de bruit.\nPlus d’essentiel.",
+              level: 1,
+              font: "serif",
+              fontSize: 80,
+              bold: false,
+              align: "center",
+              letterSpacing: -3,
+              marginBottom: 22,
+            }),
+            block("paragraph", {
+              text: "Des objets simples et bien pensés. Pour un quotidien qui vous ressemble, tout naturellement.",
+              align: "center",
+              fontSize: 18,
+              maxWidth: 550,
+              marginBottom: 28,
+            }),
+            block("button", {
+              text: "Découvrir la collection  ↗",
+              align: "center",
+              href: "#decouvrir",
+              radius: 30,
+            }),
+          ],
+        ),
+        block("image", {
+          src: ART,
+          alt: "Architecture et végétation dans une palette naturelle",
+          height: 370,
+          radius: 18,
+          anchor: "decouvrir",
+          marginBottom: 55,
+        }),
+        block("section", { paddingTop: 30, paddingBottom: 65 }, [
+          block("columns", { count: 3, gap: 20 }, [
+            block("section", { paddingTop: 0, paddingBottom: 0 }, [
+              block("card", {
+                symbol: "☀",
+                title: "Simplement utile",
+                text: "Pas de superflu. Juste ce qu’il faut, exactement là où il faut.",
+                background: "#efe4d4",
+              }),
+            ]),
+            block("section", { paddingTop: 0, paddingBottom: 0 }, [
+              block("card", {
+                symbol: "✳",
+                title: "Naturellement durable",
+                text: "De belles matières et des choix qui traversent le temps.",
+                background: "#e7eadc",
+              }),
+            ]),
+            block("section", { paddingTop: 0, paddingBottom: 0 }, [
+              block("card", {
+                symbol: "♡",
+                title: "Vraiment vous",
+                text: "Une collection à s’approprier, jour après jour.",
+                background: "#eeddd8",
+              }),
+            ]),
+          ]),
+        ]),
+        block(
+          "section",
+          {
+            background: "#e6e9d7",
+            paddingTop: 60,
+            paddingBottom: 60,
+            anchor: "contact",
+          },
+          [
+            block("heading", {
+              text: "La suite s’écrit ensemble.",
+              align: "center",
+              font: "serif",
+              bold: false,
+              fontSize: 44,
+            }),
+            block("button", {
+              text: "Parlons-en  ↗",
+              align: "center",
+              href: "mailto:bonjour@example.com",
+              radius: 30,
+            }),
+          ],
+        ),
+      ];
+      return d;
+    }
+    d.blocks = [
+      block("navigation", {
+        brand: "atelier.",
+        text: "Le studio|#approche\nNos projets|#projets\nDiscutons ↗|#contact",
+      }),
+      block(
+        "section",
+        {
+          name: "Introduction",
+          paddingTop: 62,
+          paddingBottom: 49,
+          anchor: "accueil",
+        },
+        [
+          block("paragraph", {
+            text: "STUDIO CRÉATIF & INDÉPENDANT",
+            fontSize: 11,
+            letterSpacing: 2.1,
+            align: "center",
+            color: "#7c886b",
+            bold: true,
+            marginBottom: 20,
+          }),
+          block("heading", {
+            text: "De belles idées.\nDe vrais projets.",
+            level: 1,
+            fontSize: 76,
+            align: "center",
+            letterSpacing: -3.5,
+            lineHeight: 1.07,
+            marginBottom: 21,
+          }),
+          block("paragraph", {
+            text: "Nous donnons forme à vos idées avec des sites simples,\nsinguliers et faits pour durer.",
+            fontSize: 17,
+            align: "center",
+            maxWidth: 620,
+            color: "#7e8575",
+            marginBottom: 26,
+          }),
+          block("button", {
+            text: "Donnons vie à vos idées  ↗",
+            align: "center",
+            href: "#contact",
+            fontSize: 13,
+            marginBottom: 0,
+          }),
+        ],
+      ),
+      block("image", {
+        src: ART,
+        alt: "Illustration d’un patio méditerranéen : arches, soleil et plantes dans des tons naturels.",
+        height: 365,
+        radius: 12,
+        anchor: "projets",
+        marginBottom: 65,
+      }),
+      block(
+        "section",
+        {
+          name: "Notre approche",
+          background: "#ffffff",
+          paddingTop: 72,
+          paddingBottom: 64,
+          anchor: "approche",
+        },
+        [
+          block("paragraph", {
+            text: "LES BELLES CHOSES SE CONSTRUISENT ENSEMBLE",
+            fontSize: 10,
+            letterSpacing: 1.7,
+            align: "center",
+            color: "#839374",
+            marginBottom: 15,
+          }),
+          block("heading", {
+            text: "Du sens, du soin, du caractère.",
+            fontSize: 39,
+            align: "center",
+            marginBottom: 17,
+          }),
+          block("paragraph", {
+            text: "Une approche simple : vous écouter, imaginer juste et créer avec attention.",
+            fontSize: 16,
+            align: "center",
+            color: "#8b9382",
+            marginBottom: 35,
+          }),
+          block("columns", { count: 3, gap: 20 }, [
+            block("section", { paddingTop: 0, paddingBottom: 0 }, [
+              block("card", {
+                symbol: "✳",
+                title: "Penser ensemble",
+                text: "Comprendre votre univers, vos envies et ce qui rend votre projet unique.",
+                background: "#f0f3e9",
+              }),
+            ]),
+            block("section", { paddingTop: 0, paddingBottom: 0 }, [
+              block("card", {
+                symbol: "↗",
+                title: "Créer autrement",
+                text: "Des idées singulières et un design qui ne ressemble qu’à vous.",
+                background: "#f6eee5",
+              }),
+            ]),
+            block("section", { paddingTop: 0, paddingBottom: 0 }, [
+              block("card", {
+                symbol: "◎",
+                title: "Soigner les détails",
+                text: "De la première impression au dernier clic, rien n’est laissé au hasard.",
+                background: "#edf0ee",
+              }),
+            ]),
+          ]),
+        ],
+      ),
+      block(
+        "section",
+        {
+          name: "Contact",
+          background: "#e9efdf",
+          paddingTop: 72,
+          paddingBottom: 66,
+          anchor: "contact",
+        },
+        [
+          block("heading", {
+            text: "Et si l’on créait\nquelque chose ensemble ?",
+            fontSize: 46,
+            align: "center",
+            letterSpacing: -1.8,
+            marginBottom: 25,
+          }),
+          block("button", {
+            text: "Faisons connaissance  ↗",
+            align: "center",
+            href: "mailto:bonjour@example.com",
+            marginBottom: 0,
+          }),
+        ],
+      ),
+      block("navigation", {
+        brand: "atelier.",
+        text: "Imaginé avec bloclibre|#\nRetour en haut ↑|#accueil",
+        paddingTop: 28,
+        paddingBottom: 28,
+      }),
+    ];
+    return d;
+  }
+
+  // ── Validation des projets importés et des contenus non fiables ────────────
+  function safeUrl(value, fallback = "#") {
+    const s = String(value || "").trim();
+    if (!s) return fallback;
+    if (
+      /^(https?:\/\/|mailto:|tel:|#|\.\.?\/|\/(?!\/))/i.test(s) &&
+      !/[\u0000-\u001f]/.test(s)
+    )
+      return s;
+    if (/^[a-z0-9_-][a-z0-9_./-]*(?:[?#][^\s]*)?$/i.test(s)) return s;
+    return fallback;
+  }
+  function safeImage(value) {
+    const s = String(value || "").trim();
+    if (/^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml|avif)(;|,)/i.test(s))
+      return s;
+    if (
+      (/^(https?:\/\/|\.\.?\/|\/(?!\/))/i.test(s) ||
+        /^[a-z0-9_-][a-z0-9_./%-]*(?:[?#][^\s]*)?$/i.test(s)) &&
+      !/[\u0000-\u001f\\]/.test(s)
+    )
+      return s;
+    return PLACEHOLDER;
+  }
+  function sanitizeHtml(source) {
+    const parsed = new DOMParser().parseFromString(String(source), "text/html");
+    const tags = new Set(
+      "div p a span em strong b i u s h1 h2 h3 h4 h5 h6 ul ol li blockquote cite br hr img section article header footer nav main table thead tbody tr th td figure figcaption pre code small mark details summary".split(
+        " ",
+      ),
+    );
+    const forbidden = new Set(
+      "script style iframe object embed link meta base form input textarea select button template svg math".split(
+        " ",
+      ),
+    );
+    for (const el of [...parsed.body.querySelectorAll("*")].reverse()) {
+      const tag = el.tagName.toLowerCase();
+      if (forbidden.has(tag)) {
+        el.remove();
+        continue;
+      }
+      if (!tags.has(tag)) {
+        el.replaceWith(...el.childNodes);
+        continue;
+      }
+      for (const attr of [...el.attributes]) {
+        const n = attr.name.toLowerCase();
+        if (
+          ![
+            "href",
+            "src",
+            "alt",
+            "title",
+            "class",
+            "id",
+            "style",
+            "width",
+            "height",
+            "target",
+            "rel",
+            "role",
+            "aria-label",
+            "colspan",
+            "rowspan",
+          ].includes(n)
+        ) {
+          el.removeAttribute(n);
+          continue;
+        }
+        if (n === "href") el.setAttribute(n, safeUrl(attr.value));
+        if (n === "src") el.setAttribute(n, safeImage(attr.value));
+        if (n === "style") {
+          const styles = attr.value
+            .split(";")
+            .filter(
+              (rule) =>
+                /^(text-align|color|background-color|padding(?:-[a-z]+)?|margin(?:-[a-z]+)?|font-size|font-weight|border(?:-[a-z]+)?|max-width|width)\s*:\s*[a-z0-9\s#.,%()\-]+$/i.test(
+                  rule.trim(),
+                ) && !/url|expression|import/i.test(rule),
+            )
+            .join(";");
+          el.setAttribute(n, styles);
+        }
+        if (n === "target" && attr.value !== "_blank") el.removeAttribute(n);
+      }
+      if (el.getAttribute("target") === "_blank")
+        el.setAttribute("rel", "noopener noreferrer");
+    }
+    return parsed.body.innerHTML;
+  }
+  function normalizeLegacyProject(raw) {
+    if (!raw || typeof raw !== "object" || !Array.isArray(raw.blocks))
+      throw new Error("Ce fichier n’est pas un projet bloclibre valide.");
+    if (raw.version !== 1)
+      throw new Error(
+        "Version de projet non prise en charge. Utilisez un projet bloclibre v1.",
+      );
+    const d = baseDocument();
+    d.title = String(raw.title || "Sans titre").slice(0, 80);
+    d.description = String(raw.description || "").slice(0, 320);
+    const s = raw.settings || {};
+    d.settings = {
+      font: Object.hasOwn(FONTS, s.font) ? s.font : "sans",
+      accent: color(s.accent, d.settings.accent),
+      background: color(s.background, d.settings.background),
+      text: color(s.text, d.settings.text),
+      width: clamp(s.width, 600, 1440, 1040),
+    };
+    let count = 0;
+    const ids = new Set();
+    function clean(b, depth) {
+      if (!b || !Object.hasOwn(TYPES, b.type) || depth > 10 || ++count > 400)
+        throw new Error(
+          "Projet trop complexe ou bloc non reconnu (400 blocs et 10 niveaux maximum).",
+        );
+      const result = block(b.type);
+      if (/^b-[a-z0-9-]{2,80}$/i.test(b.id || "") && !ids.has(b.id))
+        result.id = b.id;
+      ids.add(result.id);
+      for (const [key, fallback] of Object.entries(result.props)) {
+        const v = b.props?.[key];
+        if (typeof fallback === "number")
+          result.props[key] = clamp(
+            v ?? fallback,
+            key === "letterSpacing" ? -8 : 0,
+            1600,
+            fallback,
+          );
+        if (typeof fallback === "boolean" && typeof v === "boolean")
+          result.props[key] = v;
+        if (typeof fallback === "string" && typeof v === "string")
+          result.props[key] = v.slice(
+            0,
+            ["src", "poster", "backgroundImage"].includes(key)
+              ? 14000000
+              : key === "images"
+                ? 45000000
+                : key === "html" || (key === "text" && b.type === "code")
+                  ? 100000
+                  : 12000,
+          );
+      }
+      if (!["left", "center", "right"].includes(result.props.align))
+        result.props.align = "left";
+      result.props.color = color(result.props.color);
+      result.props.background = color(result.props.background);
+      result.props.anchor = result.props.anchor
+        .replace(/[^a-z0-9_-]/gi, "")
+        .slice(0, 80);
+      if (
+        "font" in result.props &&
+        !["inherit", ...Object.keys(FONTS)].includes(result.props.font)
+      )
+        result.props.font = "inherit";
+      if (b.type === "heading")
+        result.props.level = clamp(Math.round(result.props.level), 1, 6, 2);
+      if (b.type === "columns") {
+        const kids = Array.isArray(b.children) ? b.children : [];
+        if (kids.length > 4 || kids.some((child) => child?.type !== "section"))
+          throw new Error(
+            "Colonnes invalides : une à quatre sections sont attendues.",
+          );
+        result.children = kids.slice(0, 4).map((c) => clean(c, depth + 1));
+        while (
+          result.children.length <
+          clamp(Math.round(result.props.count), 1, 4, 2)
+        ) {
+          if (depth >= 10 || ++count > 400)
+            throw new Error(
+              "Projet trop complexe : 400 blocs et 10 niveaux maximum.",
+            );
+          result.children.push(
+            block("section", { paddingTop: 0, paddingBottom: 0 }),
+          );
+        }
+        result.props.count = result.children.length;
+      } else if (["section", "buttons"].includes(b.type))
+        result.children = (Array.isArray(b.children) ? b.children : []).map(
+          (c) => clean(c, depth + 1),
+        );
+      return result;
+    }
+    d.blocks = raw.blocks.map((b) => clean(b, 0));
+    return d;
+  }
+
+  // ── Rendu du site : le même moteur pour le canevas et le HTML exporté ───────
+  const SITE_CSS = `*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--bl-text);background:var(--bl-background);font-family:var(--bl-font);-webkit-font-smoothing:antialiased}a{color:inherit}img{max-width:100%;display:block}.bl-page{overflow-wrap:anywhere;overflow:hidden;min-height:100vh}.bl-block{position:relative;min-width:0}.bl-root{width:calc(100% - 88px);max-width:var(--bl-width);margin-left:auto;margin-right:auto}.bl-heading,.bl-paragraph{margin-left:auto;margin-right:auto;white-space:pre-wrap}.bl-heading{line-height:1.15;letter-spacing:-1px}.bl-paragraph{line-height:1.8}.bl-section.bl-root,.bl-navigation.bl-root{width:100%;max-width:none;padding-left:44px;padding-right:44px}.bl-container,.bl-nav-inner{width:100%;max-width:var(--bl-width);margin-left:auto;margin-right:auto}.bl-container>.bl-block:last-child{margin-bottom:0!important}.bl-columns{display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));gap:var(--gap,28px);align-items:start}.bl-columns>.bl-section{width:100%;height:100%}.bl-columns .bl-card{height:100%}.bl-image{margin-left:auto;margin-right:auto}.bl-image img{width:100%;object-fit:cover}.bl-image figcaption{font-size:12px;line-height:1.6;opacity:.6;margin-top:12px}.bl-cta{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;line-height:1.4;padding:14px 22px;font-weight:600;transition:opacity .15s,transform .15s;min-height:44px}.bl-cta:hover{opacity:.85;transform:translateY(-1px)}.bl-cta-filled{background:var(--bl-accent);color:var(--bl-on-accent,#fff);border:1px solid var(--bl-accent)}.bl-cta-outline{color:var(--bl-accent);border:1px solid var(--bl-accent);background:transparent}.bl-cta-text{color:var(--bl-accent);padding-left:0;padding-right:0;background:transparent}.bl-navigation .bl-nav-inner{display:flex;align-items:center;justify-content:space-between;gap:25px}.bl-nav-brand{text-decoration:none;font-weight:750;letter-spacing:-1.3px;line-height:1.3;flex-shrink:0}.bl-nav-links{display:flex;align-items:center;justify-content:flex-end;gap:28px;flex-wrap:wrap}.bl-nav-links a{font-size:12px;text-decoration:none;opacity:.7}.bl-nav-links a:hover{opacity:1}.bl-nav-links a:last-child{border:1px solid currentColor;padding:9px 14px;border-radius:5px;opacity:.85}.bl-card{padding-left:27px;padding-right:27px;border:1px solid #192a180a}.bl-card-symbol{font-size:28px;line-height:1;display:block;margin-bottom:30px;color:var(--bl-accent)}.bl-card h3{font-size:19px;letter-spacing:-.6px;margin:0 0 13px;line-height:1.25}.bl-card p{font-size:14px;line-height:1.85;opacity:.68;margin:0}.bl-list{list-style-position:outside;padding-left:24px;line-height:1.9}.bl-quote{padding-left:27px;border-left:3px solid var(--bl-accent);margin-left:auto;margin-right:auto}.bl-quote blockquote{font-family:Georgia,serif;line-height:1.5;margin:0 0 16px;font-style:italic}.bl-quote figcaption{font-size:12px;opacity:.6}.bl-divider{border:0;min-height:1px}.bl-html{line-height:1.7}.bl-html>:first-child{margin-top:0}.bl-html>:last-child{margin-bottom:0}@media(max-width:700px){.bl-root{width:calc(100% - 40px)}.bl-section.bl-root,.bl-navigation.bl-root{padding-left:20px;padding-right:20px}.bl-columns{grid-template-columns:1fr!important;gap:24px!important}.bl-navigation .bl-nav-inner{align-items:flex-start;gap:17px;flex-wrap:wrap}.bl-nav-links{gap:16px;justify-content:flex-start}.bl-nav-links a{font-size:11px}.bl-nav-links a:last-child{padding:6px 9px}.bl-paragraph{white-space:normal}.bl-image img{max-height:340px}.bl-card{padding-left:23px;padding-right:23px}.bl-cta{padding:13px 19px}.bl-heading{letter-spacing:-1.5px!important}.bl-quote{padding-left:20px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}`;
+  const EDITOR_CSS = `html{scroll-behavior:auto}.bl-page{min-height:600px;overflow:hidden;padding-bottom:1px}.bl-editor .bl-block{cursor:default;outline:1px solid transparent;outline-offset:3px;transition:outline-color .1s}.bl-editor .bl-block:hover{outline-color:#87a97580}.bl-editor .bl-selected{outline:2px solid #65894d!important;outline-offset:3px;z-index:2}.bl-editor .bl-selected:after{content:attr(data-block-label);position:absolute;left:-5px;top:-22px;background:#65894d;color:#fff;font:500 9px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:3px 7px;letter-spacing:.1px;border-radius:3px 3px 0 0;pointer-events:none;z-index:10;white-space:nowrap}.bl-editor .bl-block [contenteditable]{outline:0;cursor:text;min-width:7px;max-width:100%}.bl-editor .bl-heading>[contenteditable],.bl-editor .bl-paragraph>[contenteditable]{display:inline-block;vertical-align:top}.bl-editor [contenteditable]:empty:before{content:attr(data-placeholder);color:#aab59c}.bl-editor a{cursor:text}.bl-editor .bl-cta:hover{transform:none;opacity:1}.bl-empty-container{padding:34px 15px;text-align:center;border:1px dashed #bacbaa;border-radius:4px;color:#9bad89;font:12px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fbf4;min-height:86px}.bl-drop-before{box-shadow:0 -4px 0 #719d4c!important;outline-color:transparent!important}.bl-drop-after{box-shadow:0 4px 0 #719d4c!important;outline-color:transparent!important}.bl-drop-inside{outline:2px dashed #719d4c!important;outline-offset:-5px!important;background-color:#b9d99b18!important}.bl-editor-empty{text-align:center;padding:100px 35px 150px;color:#8e9f7e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}.bl-editor-empty div{height:56px;width:56px;font-size:32px;line-height:56px;background:#edf4e5;color:#819c6b;border-radius:15px;margin:0 auto 22px}.bl-editor-empty h1{font-size:24px;letter-spacing:-.7px;color:#506244;font-weight:550}.bl-editor-empty p{font-size:14px;line-height:1.8;color:#9caa8d}`;
+  function themeCss(d) {
+    const s = d.settings;
+    const rgb = color(s.accent, "#38654b")
+      .slice(1)
+      .match(/../g)
+      .map((n) => parseInt(n, 16));
+    const light = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000 > 160;
+    return `:root{--bl-accent:${s.accent};--bl-on-accent:${light ? "#25332d" : "#ffffff"};--bl-background:${s.background};--bl-text:${s.text};--bl-width:${s.width}px;--bl-font:${FONTS[s.font] || FONTS.sans}}\n${SITE_CSS}`;
+  }
+  function blockStyle(p) {
+    return `text-align:${["left", "center", "right"].includes(p.align) ? p.align : "left"};${color(p.color) ? `color:${p.color};` : ""}${color(p.background) ? `background:${p.background};` : ""}padding-top:${clamp(p.paddingTop, 0, 600)}px;padding-bottom:${clamp(p.paddingBottom, 0, 600)}px;margin-top:${clamp(p.marginTop, 0, 600)}px;margin-bottom:${clamp(p.marginBottom, 0, 600)}px;`;
+  }
+  function renderBlock(b, editor = false, root = false) {
+    const p = b.props;
+    const edit = (key, placeholder = "") =>
+      editor
+        ? ` contenteditable="true" spellcheck="false" data-edit="${key}" data-placeholder="${esc(placeholder)}"`
+        : "";
+    const content = (key, placeholder = "") =>
+      `<span${edit(key, placeholder)}>${esc(p[key])}</span>`;
+    const wrap = (tag, inner, extraStyle = "", extraAttrs = "") =>
+      `<${tag} class="bl-block bl-${b.type}${root ? " bl-root" : ""}"${p.anchor ? ` id="${esc(p.anchor.replace(/[^a-z0-9_-]/gi, ""))}"` : ""}${editor ? ` data-block-id="${esc(b.id)}" data-block-label="${esc(TYPES[b.type].label)}"` : ""} style="${esc(blockStyle(p) + extraStyle)}"${extraAttrs}>${inner}</${tag}>`;
+    const textStyle = () =>
+      `font-size:clamp(${Math.min(32, clamp(p.fontSize, 8, 160, 40))}px,${Math.max(2, clamp(p.fontSize, 8, 160) / 10)}vw,${clamp(p.fontSize, 8, 160)}px);font-family:${FONTS[p.font] || "inherit"};font-weight:${p.bold ? 750 : 400};font-style:${p.italic ? "italic" : "normal"};line-height:${clamp(p.lineHeight, 0.8, 3, 1.5)};letter-spacing:${clamp(p.letterSpacing, -8, 15, 0)}px;${p.maxWidth ? `max-width:${clamp(p.maxWidth, 100, 1440)}px;` : ""}`;
+    switch (b.type) {
+      case "heading":
+        return wrap(
+          `h${clamp(Math.round(p.level), 1, 6, 2)}`,
+          content("text", "Votre titre…"),
+          textStyle(),
+        );
+      case "paragraph":
+        return wrap("p", content("text", "Votre texte…"), textStyle());
+      case "button":
+        return wrap(
+          "div",
+          `<a class="bl-cta bl-cta-${["filled", "outline", "text"].includes(p.variant) ? p.variant : "filled"}" href="${esc(safeUrl(p.href))}"${p.newTab ? ' target="_blank" rel="noopener noreferrer"' : ""} style="border-radius:${clamp(p.radius, 0, 80)}px;font-size:${clamp(p.fontSize, 10, 40, 14)}px;${color(p.color) ? `color:${p.color};` : ""}${color(p.background) ? `background:${p.background};border-color:${p.background};` : ""}">${content("text", "Libellé du bouton")}</a>`,
+        );
+      case "image":
+        return wrap(
+          "figure",
+          `<img src="${esc(safeImage(p.src))}" alt="${esc(p.alt)}" style="height:${p.height ? `${clamp(p.height, 40, 1000)}px` : "auto"};object-fit:${p.fit === "contain" ? "contain" : "cover"};border-radius:${clamp(p.radius, 0, 100)}px" loading="lazy" decoding="async">${p.caption ? `<figcaption${edit("caption")}>${esc(p.caption)}</figcaption>` : ""}`,
+        );
+      case "section":
+        return wrap(
+          "section",
+          `<div class="bl-container"${p.gap ? ` style="display:flex;flex-direction:column;gap:${clamp(p.gap, 0, 120)}px"` : ""}>${b.children?.length ? b.children.map((child) => renderBlock(child, editor)).join("\n") : editor ? '<div class="bl-empty-container">Glissez un bloc ici<br>ou ajoutez-le depuis la bibliothèque.</div>' : ""}</div>`,
+        );
+      case "columns":
+        return wrap(
+          "div",
+          (b.children || [])
+            .map((child) => renderBlock(child, editor))
+            .join("\n"),
+          `--cols:${clamp(b.children?.length || p.count, 1, 4, 2)};--gap:${clamp(p.gap, 0, 100)}px;align-items:${["start", "center", "end", "stretch"].includes(p.verticalAlign) ? p.verticalAlign : "start"};`,
+        );
+      case "divider":
+        return wrap(
+          "div",
+          "",
+          `height:${clamp(p.thickness, 1, 15, 1)}px;border-top:${clamp(p.thickness, 1, 15, 1)}px ${["solid", "dashed", "dotted"].includes(p.style) ? p.style : "solid"} ${color(p.color, "#dfe5d6")};`,
+          ' role="separator"',
+        );
+      case "spacer":
+        return wrap(
+          "div",
+          "",
+          `height:${clamp(p.height, 4, 600, 48)}px;`,
+          ' aria-hidden="true"',
+        );
+      case "list":
+        return wrap(
+          p.ordered ? "ol" : "ul",
+          String(p.text)
+            .split("\n")
+            .map((text) => `<li${edit("list-item")}>${esc(text)}</li>`)
+            .join(""),
+          `font-size:${clamp(p.fontSize, 10, 50, 17)}px;`,
+        );
+      case "quote":
+        return wrap(
+          "figure",
+          `<blockquote style="font-size:clamp(20px,4vw,${clamp(p.fontSize, 12, 70, 27)}px)"${edit("text")}>${esc(p.text)}</blockquote>${p.author ? `<figcaption${edit("author")}>— ${esc(p.author)}</figcaption>` : ""}`,
+        );
+      case "card":
+        return wrap(
+          "article",
+          `<span class="bl-card-symbol"${edit("symbol")}>${esc(p.symbol)}</span><h3${edit("title")}>${esc(p.title)}</h3><p${edit("text")}>${esc(p.text)}</p>`,
+          `border-radius:${clamp(p.radius, 0, 80, 12)}px;`,
+        );
+      case "navigation":
+        return wrap(
+          "header",
+          `<div class="bl-nav-inner"><a href="#" class="bl-nav-brand" style="font-size:${clamp(p.fontSize, 14, 50, 24)}px">${content("brand")}</a><nav class="bl-nav-links" aria-label="Navigation">${String(
+            p.text,
+          )
+            .split("\n")
+            .filter(Boolean)
+            .map((line) => {
+              const [label, ...url] = line.split("|");
+              return `<a href="${esc(safeUrl(url.join("|") || "#"))}">${esc(label.trim())}</a>`;
+            })
+            .join("")}</nav></div>`,
+        );
+      case "html":
+        return wrap("div", sanitizeHtml(p.html));
+      default:
+        return "";
+    }
+  }
+  function siteBody(d, editor = false) {
+    return `<main class="bl-page${editor ? " bl-editor" : ""}">\n${d.blocks.map((b) => renderBlock(b, editor, true)).join("\n")}${editor && !d.blocks.length ? '<div class="bl-editor-empty"><div>+</div><h1>Tout commence par un bloc.</h1><p>Ajoutez un titre, une image ou une section<br>depuis la bibliothèque à gauche.</p></div>' : ""}\n</main>`;
+  }
+  function htmlDocument(d, editor = false, fragment = false) {
+    const css = themeCss(d) + (editor ? `\n${EDITOR_CSS}` : "");
+    const body = siteBody(d, editor);
+    if (fragment) return `<style>\n${css}\n</style>\n${body}`;
+    return `<!doctype html>\n<html lang="fr">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <meta name="description" content="${esc(d.description)}">\n  <meta name="generator" content="bloclibre">\n  <title>${esc(d.title)}</title>\n  <style>\n${css}\n  </style>\n</head>\n<body>\n${body}\n</body>\n</html>`;
+  }
+
+  /* STUDIO_EXTENSIONS */
+
+  // ── État, historique et sauvegarde locale ─────────────────────────────────
+  let doc;
+  let loadWarning = "";
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    doc = saved ? normalizeProject(JSON.parse(saved)) : starter();
+  } catch (error) {
+    doc = starter();
+    loadWarning =
+      "La sauvegarde locale n’a pas pu être lue. Vous pouvez importer un projet JSON.";
+  }
+  function flatten(blocks = doc.blocks) {
+    return blocks.flatMap((b) => [
+      b,
+      ...(b.children ? flatten(b.children) : []),
+    ]);
+  }
+  function findBlock(id, blocks = doc.blocks, parentId = null) {
+    for (let i = 0; i < blocks.length; i++) {
+      if (blocks[i].id === id)
+        return { block: blocks[i], siblings: blocks, index: i, parentId };
+      if (blocks[i].children) {
+        const found = findBlock(id, blocks[i].children, blocks[i].id);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  let selectedId =
+    flatten().find((b) => b.type === "heading")?.id ||
+    doc.blocks[0]?.id ||
+    null;
+  let sidebarTab = "blocks",
+    inspectorTab = "block",
+    filter = "all",
+    search = "",
+    device = matchMedia("(max-width:740px)").matches ? "mobile" : "desktop";
+  let history = [JSON.stringify(snapshotProject())],
+    historyIndex = 0,
+    lastHistoryKey = "",
+    lastHistoryTime = 0;
+  let saveTimer,
+    canvasTimer,
+    canvasGeneration = 0,
+    frameHeight = 1400,
+    frameScale = 1,
+    pendingScrollId = null,
+    frameObserver = null;
+  let dragData = null,
+    dropTarget = null,
+    modalState = null,
+    previousFocus = null,
+    confirmAction = null;
+  let storageWarned = false,
+    modalExportMode = "full",
+    previewDevice = "desktop";
+  function historyControls() {
+    $("#undo-button").disabled = historyIndex === 0;
+    $("#redo-button").disabled = historyIndex === history.length - 1;
+  }
+  function queueSave() {
+    clearTimeout(saveTimer);
+    studioHasUnsaved = true;
+    const status = $("#save-status");
+    status.className = "save-status saving";
+    $("span", status).textContent = "Enregistrement…";
+    saveTimer = setTimeout(saveNow, 450);
+  }
+  function saveNow() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshotProject()));
+      $("#save-status").className = "save-status";
+      $("#save-status span").textContent = "Enregistré en local";
+      storageWarned = false;
+    } catch (error) {
+      $("#save-status").className = "save-status error";
+      $("#save-status span").textContent = "Sauvegarde indisponible";
+      if (!storageWarned) {
+        toast(
+          "Stockage local indisponible ou plein. Téléchargez votre projet JSON pour le conserver.",
+          true,
+        );
+        storageWarned = true;
+      }
+    }
+  }
+  function commit(mutator, options = {}) {
+    mutator();
+    const serialized = JSON.stringify(snapshotProject());
+    if (serialized === history[historyIndex]) return;
+    // Une ancienne notification ne doit jamais annuler une action plus récente.
+    $$(".toast-undo").forEach((button) => button.remove());
+    const now = Date.now();
+    if (
+      options.key &&
+      options.key === lastHistoryKey &&
+      now - lastHistoryTime < 750 &&
+      historyIndex === history.length - 1 &&
+      historyIndex > 0
+    )
+      history[historyIndex] = serialized;
+    else {
+      history = history.slice(0, historyIndex + 1);
+      history.push(serialized);
+      while (
+        history.length > 80 ||
+        (history.length > 2 &&
+          history.reduce((n, item) => n + item.length * 2, 0) >
+            48 * 1024 * 1024)
+      )
+        history.shift();
+      historyIndex = history.length - 1;
+    }
+    lastHistoryKey = options.key || "";
+    lastHistoryTime = now;
+    queueSave();
+    historyControls();
+    updateMeta();
+    if (options.canvas !== false) scheduleCanvas(options.delay ?? 90);
+    if (options.inspector !== false) renderInspector();
+    if (sidebarTab === "structure") renderLibrary();
+    renderSelectionToolbar();
+  }
+  function travelHistory(delta) {
+    const next = historyIndex + delta;
+    if (next < 0 || next >= history.length) return;
+    $$(".toast-undo").forEach((button) => button.remove());
+    historyIndex = next;
+    doc = normalizeProject(JSON.parse(history[historyIndex]));
+    lastHistoryKey = "";
+    if (!findBlock(selectedId)) selectedId = doc.blocks[0]?.id || null;
+    queueSave();
+    historyControls();
+    updateMeta();
+    renderInspector();
+    renderLibrary();
+    renderSelectionToolbar();
+    scheduleCanvas(0);
+  }
+  function updateMeta() {
+    if (document.activeElement !== $("#project-title"))
+      $("#project-title").value = doc.title;
+    $("#canvas-title").textContent = doc.title;
+    const n = flatten().length;
+    $("#block-count").textContent = `${n} bloc${n > 1 ? "s" : ""}`;
+    document.title = `${doc.title} — bloclibre`;
+  }
+  function toast(message, error = false, undoable = false) {
+    const el = document.createElement("div");
+    el.className = `toast${error ? " error" : ""}`;
+    el.innerHTML = `${icon(error ? "info" : "checkCircle")}<span>${esc(message)}</span>${undoable ? '<button class="toast-undo">Annuler</button>' : ""}`;
+    if (undoable)
+      $("button", el).onclick = () => {
+        travelHistory(-1);
+        el.remove();
+      };
+    const container = $("#toasts");
+    while (container.children.length >= 2) container.firstElementChild.remove();
+    container.appendChild(el);
+    setTimeout(() => el.remove(), error ? 7000 : 4000);
+  }
+
+  // ── Canevas, sélection et édition directe ─────────────────────────────────
+  const frame = $("#editor-frame");
+  function scheduleCanvas(delay = 0) {
+    clearTimeout(canvasTimer);
+    canvasTimer = setTimeout(renderCanvas, delay);
+  }
+  function renderCanvas() {
+    frameObserver?.disconnect();
+    const generation = ++canvasGeneration;
+    frame.onload = () => {
+      if (generation !== canvasGeneration) return;
+      const fd = frame.contentDocument;
+      if (!fd) return;
+      updateFrameSelection();
+      studioFrameReady(fd);
+      fd.addEventListener("click", (event) => {
+        if (event.target.closest("a")) event.preventDefault();
+        const el = event.target.closest("[data-block-id]");
+        if (el) selectBlock(el.dataset.blockId, false);
+      });
+      fd.addEventListener("input", onCanvasInput);
+      fd.addEventListener("paste", (event) => {
+        if (!event.target.closest("[contenteditable]")) return;
+        event.preventDefault();
+        const text = event.clipboardData?.getData("text/plain") || "";
+        fd.execCommand("insertText", false, text);
+      });
+      fd.addEventListener("keydown", (event) => handleKeys(event));
+      fd.addEventListener("dragover", onFrameDragOver);
+      fd.addEventListener("drop", onFrameDrop);
+      fd.addEventListener("dragleave", (event) => {
+        if (!event.relatedTarget) clearDrop();
+      });
+      const measure = () => {
+        if (generation !== canvasGeneration) return;
+        frameHeight = Math.max(
+          620,
+          Math.ceil($(".bl-page", fd).getBoundingClientRect().height),
+        );
+        layoutCanvas();
+      };
+      // Observe le contenu, pas la hauteur de l’iframe, afin d’éviter une boucle.
+      frameObserver = new ResizeObserver(measure);
+      frameObserver.observe($(".bl-page", fd));
+      $$("img", fd).forEach((img) =>
+        img.addEventListener("load", measure, { once: true }),
+      );
+      requestAnimationFrame(() => {
+        measure();
+        if (pendingScrollId) {
+          scrollToBlock(pendingScrollId);
+          pendingScrollId = null;
+        }
+      });
+    };
+    // Réinitialiser la hauteur évite qu’une page raccourcie garde un grand vide.
+    frame.style.height = "1px";
+    frame.srcdoc = htmlDocument(doc, true);
+  }
+  function layoutCanvas() {
+    const scroller = $("#canvas-scroll");
+    const cs = getComputedStyle(scroller);
+    const available =
+      scroller.clientWidth -
+      parseFloat(cs.paddingLeft) -
+      parseFloat(cs.paddingRight);
+    const width = WIDTHS[device];
+    frameScale = Math.min(1, Math.max(0.15, available / width));
+    frame.style.width = `${width}px`;
+    frame.style.height = `${frameHeight}px`;
+    frame.style.transform = `scale(${frameScale})`;
+    const wrap = $("#canvas-frame-wrap");
+    wrap.style.width = `${Math.round(width * frameScale)}px`;
+    wrap.style.height = `${Math.round(frameHeight * frameScale)}px`;
+    $(".canvas-intro").style.width = `${Math.round(width * frameScale)}px`;
+    $("#end-add-button").style.maxWidth = `${Math.round(width * frameScale)}px`;
+    $("#zoom-value").textContent = `${Math.round(frameScale * 100)} %`;
+    $("#canvas-dimensions").textContent = `${width} px`;
+  }
+  function updateFrameSelection() {
+    try {
+      $$("[data-block-id]", frame.contentDocument).forEach((el) =>
+        el.classList.toggle("bl-selected", el.dataset.blockId === selectedId),
+      );
+    } catch (error) {
+      /* iframe en cours de chargement */
+    }
+  }
+  function selectBlock(id, scroll = false) {
+    if (!findBlock(id)) return;
+    selectedId = id;
+    inspectorTab = "block";
+    $$("[data-inspector-tab]").forEach((b) => {
+      b.classList.toggle("active", b.dataset.inspectorTab === "block");
+      b.setAttribute(
+        "aria-selected",
+        String(b.dataset.inspectorTab === "block"),
+      );
+    });
+    updateFrameSelection();
+    renderInspector();
+    renderSelectionToolbar();
+    if (sidebarTab === "structure") renderLibrary();
+    if (scroll) scrollToBlock(id);
+  }
+  function scrollToBlock(id) {
+    const el = frame.contentDocument?.querySelector(`[data-block-id="${id}"]`);
+    if (!el) return;
+    const scroller = $("#canvas-scroll");
+    const rect = el.getBoundingClientRect();
+    const top = $("#canvas-frame-wrap").offsetTop + rect.top * frameScale - 110;
+    scroller.scrollTo({
+      top: Math.max(0, top),
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  }
+  function onCanvasInput(event) {
+    const editable = event.target.closest("[data-edit]");
+    if (!editable) return;
+    const el = editable.closest("[data-block-id]");
+    const found = findBlock(el?.dataset.blockId);
+    if (!found) return;
+    const key = editable.dataset.edit;
+    let value = editable.innerText.replace(/\r/g, "").replace(/\n$/, "");
+    if (key === "author") value = value.replace(/^—\s*/, "");
+    commit(
+      () => {
+        if (key === "list-item")
+          found.block.props.text = $$("li", el)
+            .map((li) => li.innerText)
+            .join("\n");
+        else found.block.props[key] = value;
+      },
+      { key: `text-${found.block.id}-${key}`, canvas: false, inspector: false },
+    );
+    const control = $(
+      `[data-prop="${key === "list-item" ? "text" : key}"]`,
+      $("#inspector-content"),
+    );
+    if (control && document.activeElement !== control)
+      control.value = key === "list-item" ? found.block.props.text : value;
+  }
+  function setDevice(next) {
+    if (!WIDTHS[next]) return;
+    device = next;
+    $$("#device-switch [data-device]").forEach((b) => {
+      b.classList.toggle("active", b.dataset.device === next);
+      b.setAttribute("aria-pressed", String(b.dataset.device === next));
+    });
+    layoutCanvas();
+  }
+  function renderSelectionToolbar() {
+    const f = findBlock(selectedId);
+    const el = $("#selection-toolbar");
+    if (!f) {
+      el.innerHTML = `<span class="selected-type">${icon("plus")}Votre prochaine belle idée commence ici</span>`;
+      return;
+    }
+    el.innerHTML = `<button class="icon-button block-drag-handle" draggable="true" aria-label="Glisser pour déplacer le bloc" title="Glisser pour déplacer">${icon("grip")}</button><span class="selected-type">${icon(TYPES[f.block.type].icon)}${TYPES[f.block.type].label}${f.block.type === "heading" ? ` <span style="opacity:.5">H${f.block.props.level}</span>` : ""}</span><span class="toolbar-rule"></span><button class="icon-button" data-block-action="up" aria-label="Déplacer le bloc vers le haut" title="Monter" ${f.index === 0 ? "disabled" : ""}>${icon("arrowUp")}</button><button class="icon-button" data-block-action="down" aria-label="Déplacer le bloc vers le bas" title="Descendre" ${f.index === f.siblings.length - 1 ? "disabled" : ""}>${icon("arrowDown")}</button><button class="icon-button" data-block-action="duplicate" aria-label="Dupliquer le bloc" title="Dupliquer">${icon("copy")}</button><span class="toolbar-rule"></span><button class="icon-button delete-block" data-block-action="delete" aria-label="Supprimer le bloc" title="Supprimer">${icon("trash")}</button>`;
+  }
+
+  // ── Ajout, déplacement, duplication, suppression ──────────────────────────
+  function destinationForSelection() {
+    const f = findBlock(selectedId);
+    if (!f) return { parentId: null, index: doc.blocks.length };
+    if (["section", "buttons"].includes(f.block.type))
+      return { parentId: f.block.id, index: f.block.children.length };
+    if (f.block.type === "columns") {
+      const col = f.block.children[0];
+      if (col?.children)
+        return { parentId: col.id, index: col.children.length };
+    }
+    return { parentId: f.parentId, index: f.index + 1 };
+  }
+  function childrenOf(parentId) {
+    return parentId === null ? doc.blocks : findBlock(parentId)?.block.children;
+  }
+  function subtreeDepth(b) {
+    return b.children?.length
+      ? 1 + Math.max(...b.children.map(subtreeDepth))
+      : 0;
+  }
+  function insertionDepth(parentId) {
+    let depth = 0;
+    while (parentId) {
+      depth++;
+      parentId = findBlock(parentId)?.parentId;
+    }
+    return depth;
+  }
+  function acceptsColumnChild(parentId, node, sameParent = false) {
+    const parent = findBlock(parentId)?.block;
+    if (parent?.type !== "columns") return true;
+    if (node.type !== "section") {
+      toast(
+        "Glissez ce bloc à l’intérieur d’une colonne, plutôt qu’entre les colonnes.",
+        true,
+      );
+      return false;
+    }
+    if (!sameParent && parent.children.length >= 4) {
+      toast(
+        "Quatre colonnes maximum. Ajoutez votre bloc à l’intérieur de l’une d’elles.",
+        true,
+      );
+      return false;
+    }
+    return true;
+  }
+  function syncColumnCount(parentId) {
+    const parent = findBlock(parentId)?.block;
+    if (parent?.type === "columns") parent.props.count = parent.children.length;
+  }
+  function addBlock(type, destination = destinationForSelection()) {
+    if (!Object.hasOwn(TYPES, type)) return;
+    const newBlock = block(type);
+    if (flatten().length + flatten([newBlock]).length > 400) {
+      toast(
+        "Limite de 400 blocs atteinte. Simplifiez la page avant d’ajouter un bloc.",
+        true,
+      );
+      return;
+    }
+    if (insertionDepth(destination.parentId) + subtreeDepth(newBlock) > 10) {
+      toast(
+        "Imbrication maximale atteinte : 10 niveaux. Ajoutez le bloc dans une section moins profonde.",
+        true,
+      );
+      return;
+    }
+    const children = childrenOf(destination.parentId);
+    if (!children || !acceptsColumnChild(destination.parentId, newBlock))
+      return;
+    commit(
+      () => {
+        children.splice(
+          clamp(destination.index, 0, children.length),
+          0,
+          newBlock,
+        );
+        syncColumnCount(destination.parentId);
+        selectedId = newBlock.id;
+      },
+      { delay: 0 },
+    );
+    inspectorTab = "block";
+    syncInspectorTabs();
+    renderInspector();
+    pendingScrollId = newBlock.id;
+    closePanels();
+    toast(`${TYPES[type].label} ajouté.`, false, true);
+  }
+  function duplicateBlock() {
+    const f = findBlock(selectedId);
+    if (!f) return;
+    const copy = JSON.parse(JSON.stringify(f.block));
+    const rekey = (b) => {
+      b.id = uid();
+      b.children?.forEach(rekey);
+    };
+    rekey(copy);
+    if (flatten().length + flatten([copy]).length > 400) {
+      toast("Limite de 400 blocs atteinte.", true);
+      return;
+    }
+    if (!acceptsColumnChild(f.parentId, copy)) return;
+    commit(
+      () => {
+        f.siblings.splice(f.index + 1, 0, copy);
+        syncColumnCount(f.parentId);
+        selectedId = copy.id;
+      },
+      { delay: 0 },
+    );
+    pendingScrollId = copy.id;
+    toast("Bloc dupliqué.", false, true);
+  }
+  function deleteBlock(id = selectedId) {
+    const f = findBlock(id);
+    if (!f) return;
+    const label = TYPES[f.block.type].label;
+    if (
+      findBlock(f.parentId)?.block.type === "columns" &&
+      f.siblings.length === 1
+    ) {
+      toast(
+        "Gardez au moins une colonne, ou supprimez le bloc Colonnes qui la contient.",
+        true,
+      );
+      return;
+    }
+    commit(
+      () => {
+        f.siblings.splice(f.index, 1);
+        if (id === selectedId || !findBlock(selectedId))
+          selectedId =
+            f.siblings[Math.max(0, f.index - 1)]?.id ||
+            f.parentId ||
+            doc.blocks[0]?.id ||
+            null;
+        if (f.parentId) {
+          const parent = findBlock(f.parentId)?.block;
+          if (parent?.type === "columns")
+            parent.props.count = Math.max(1, parent.children.length);
+        }
+      },
+      { delay: 0 },
+    );
+    toast(`${label} supprimé.`, false, true);
+  }
+  function moveBlock(delta) {
+    const f = findBlock(selectedId);
+    if (!f) return;
+    const next = f.index + delta;
+    if (next < 0 || next >= f.siblings.length) return;
+    commit(
+      () => {
+        [f.siblings[f.index], f.siblings[next]] = [
+          f.siblings[next],
+          f.siblings[f.index],
+        ];
+      },
+      { delay: 0 },
+    );
+    pendingScrollId = selectedId;
+  }
+  function moveTo(id, destination) {
+    const source = findBlock(id);
+    if (!source) return;
+    if (
+      destination.parentId === id ||
+      flatten([source.block]).some((b) => b.id === destination.parentId)
+    ) {
+      toast("Impossible de déplacer un bloc à l’intérieur de lui-même.", true);
+      return;
+    }
+    const dest = childrenOf(destination.parentId);
+    if (!dest) return;
+    if (
+      !acceptsColumnChild(
+        destination.parentId,
+        source.block,
+        source.parentId === destination.parentId,
+      )
+    )
+      return;
+    if (
+      findBlock(source.parentId)?.block.type === "columns" &&
+      source.siblings.length === 1 &&
+      source.parentId !== destination.parentId
+    ) {
+      toast("La dernière colonne doit rester dans son bloc Colonnes.", true);
+      return;
+    }
+    if (
+      insertionDepth(destination.parentId) + subtreeDepth(source.block) >
+      10
+    ) {
+      toast("Ce déplacement dépasserait 10 niveaux d’imbrication.", true);
+      return;
+    }
+    let index = destination.index;
+    if (dest === source.siblings && source.index < index) index--;
+    if (dest === source.siblings && source.index === index) return;
+    commit(
+      () => {
+        source.siblings.splice(source.index, 1);
+        dest.splice(clamp(index, 0, dest.length), 0, source.block);
+        syncColumnCount(source.parentId);
+        syncColumnCount(destination.parentId);
+        selectedId = id;
+      },
+      { delay: 0 },
+    );
+    pendingScrollId = id;
+  }
+  function blockAction(action) {
+    if (action === "up") moveBlock(-1);
+    if (action === "down") moveBlock(1);
+    if (action === "duplicate") duplicateBlock();
+    if (action === "delete") deleteBlock();
+  }
+
+  // ── Bibliothèque et arborescence ──────────────────────────────────────────
+  function renderLibrary() {
+    const el = $("#library-content");
+    $$("[data-sidebar-tab]").forEach((b) => {
+      const active = b.dataset.sidebarTab === sidebarTab;
+      b.classList.toggle("active", active);
+      b.setAttribute("aria-selected", String(active));
+    });
+    if (sidebarTab === "structure") {
+      function row(b, depth = 0) {
+        const label =
+          b.props.name ||
+          (b.type === "heading"
+            ? b.props.text.split("\n")[0]
+            : b.type === "navigation"
+              ? b.props.brand
+              : TYPES[b.type].label);
+        return `<div class="tree-row${b.id === selectedId ? " selected" : ""}" data-tree-id="${b.id}" draggable="true" tabindex="0" role="button" aria-label="Sélectionner ${esc(label)}" style="padding-left:${7 + Math.min(depth, 7) * 12}px">${icon("grip", "tree-grip")}${icon(TYPES[b.type].icon)}<span class="tree-label">${esc(label || TYPES[b.type].label)}</span><button class="tree-delete" data-delete-id="${b.id}" aria-label="Supprimer ${esc(label)}">${icon("trash")}</button></div>${(b.children || []).map((c) => row(c, depth + 1)).join("")}`;
+      }
+      el.innerHTML = `<h2 class="block-library-title">La vue d’ensemble</h2><p class="tree-note">Retrouvez vos blocs et glissez-les pour les réorganiser.</p><div class="tree-list">${doc.blocks.length ? doc.blocks.map((b) => row(b)).join("") : '<div class="tree-empty">Votre page est une toile blanche. Ajoutez votre premier bloc depuis l’onglet Blocs.</div>'}</div>`;
+      return;
+    }
+    const matches = Object.entries(TYPES).filter(
+      ([type, t]) =>
+        (filter === "all" ||
+          (filter === "text"
+            ? ["heading", "paragraph", "list", "quote"].includes(type)
+            : filter === "layout"
+              ? t.group === "layout"
+              : ["image", "button", "card", "navigation", "html"].includes(
+                  type,
+                ))) &&
+        `${t.label} ${t.desc}`
+          .toLocaleLowerCase("fr")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .includes(
+            search
+              .toLocaleLowerCase("fr")
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, ""),
+          ),
+    );
+    el.innerHTML = `<h2 class="block-library-title">Un bloc, mille possibilités.</h2><p class="library-subtitle">Glissez un bloc dans votre page<br>ou cliquez pour l’ajouter.</p><div class="search-field">${icon("search")}<input id="block-search" placeholder="Rechercher un bloc…" value="${esc(search)}" aria-label="Rechercher un bloc" autocomplete="off"><span class="search-key">/</span></div><div class="filter-row" role="group" aria-label="Filtrer les blocs">${[
+      ["all", "Tous"],
+      ["text", "Texte"],
+      ["layout", "Structure"],
+      ["more", "Autres"],
+    ]
+      .map(
+        ([id, label]) =>
+          `<button class="filter-chip${filter === id ? " active" : ""}" data-filter="${id}" aria-pressed="${filter === id}">${label}</button>`,
+      )
+      .join("")}</div><div id="block-groups">${
+      GROUPS.map((group) => {
+        const list = matches.filter(([, t]) => t.group === group.id);
+        return list.length
+          ? `<section class="block-group"><h3>${group.label}<span></span></h3><div class="block-grid">${list.map(([type, t]) => `<button class="block-card" data-add-type="${type}" draggable="true" aria-label="Ajouter : ${t.label}" title="${t.desc}">${icon(t.icon)}<span>${t.label}</span><span class="card-add">+</span></button>`).join("")}</div></section>`
+          : "";
+      }).join("") ||
+      '<p class="no-results">Aucun bloc trouvé.<br>Essayez un autre mot.</p>'
+    }</div>`;
+  }
+  function changeSidebarTab(tab) {
+    sidebarTab = tab;
+    renderLibrary();
+  }
+
+  // ── Glisser-déposer natif, entre bibliothèque, canevas et structure ─────────
+  function clearDrop() {
+    try {
+      $$(
+        ".bl-drop-before,.bl-drop-after,.bl-drop-inside",
+        frame.contentDocument,
+      ).forEach((el) =>
+        el.classList.remove(
+          "bl-drop-before",
+          "bl-drop-after",
+          "bl-drop-inside",
+        ),
+      );
+    } catch (error) {
+      /* chargement */
+    }
+    $$(".tree-row.drop-before,.tree-row.drop-after").forEach((el) =>
+      el.classList.remove("drop-before", "drop-after"),
+    );
+    dropTarget = null;
+  }
+  function readDrag(event) {
+    if (dragData) return dragData;
+    try {
+      const d = JSON.parse(event.dataTransfer.getData(MIME));
+      return ["library", "structure"].includes(d.source) ? d : null;
+    } catch (error) {
+      return null;
+    }
+  }
+  function onFrameDragOver(event) {
+    if (!dragData && ![...event.dataTransfer.types].includes(MIME)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect =
+      dragData?.source === "library" ? "copy" : "move";
+    clearDrop();
+    const el = event.target.closest("[data-block-id]");
+    if (!el) {
+      dropTarget = { parentId: null, index: doc.blocks.length };
+      return;
+    }
+    const f = findBlock(el.dataset.blockId);
+    if (!f) return;
+    const rect = el.getBoundingClientRect();
+    const ratio = (event.clientY - rect.top) / rect.height;
+    if (
+      ["section", "buttons"].includes(f.block.type) &&
+      ((ratio > 0.2 && ratio < 0.8) || !f.block.children.length)
+    ) {
+      dropTarget = { parentId: f.block.id, index: f.block.children.length };
+      el.classList.add("bl-drop-inside");
+    } else {
+      const after = ratio > 0.5;
+      dropTarget = { parentId: f.parentId, index: f.index + (after ? 1 : 0) };
+      el.classList.add(after ? "bl-drop-after" : "bl-drop-before");
+    }
+  }
+  function onFrameDrop(event) {
+    const data = readDrag(event);
+    if (!data) return;
+    event.preventDefault();
+    const destination = dropTarget || {
+      parentId: null,
+      index: doc.blocks.length,
+    };
+    clearDrop();
+    dragData = null;
+    if (data.source === "library") addBlock(data.type, destination);
+    else moveTo(data.id, destination);
+  }
+
+  // ── Inspecteur des blocs et de la page ────────────────────────────────────
+  const field = (label, input, help = "") =>
+    `<div class="field"><label>${label}</label>${input}${help ? `<p class="inspector-help">${help}</p>` : ""}</div>`;
+  const propInput = (key, value, type = "text", extra = "") =>
+    `<input class="control" type="${type}" data-prop="${key}" value="${esc(value)}" ${type === "number" ? 'data-kind="number"' : ""} aria-label="${esc(key)}" ${extra}>`;
+  const propArea = (key, value, extra = "") =>
+    `<textarea class="control" data-prop="${key}" aria-label="${esc(key)}" ${extra}>${esc(value)}</textarea>`;
+  const propSelect = (key, value, options) =>
+    `<select class="control control-select" data-prop="${key}" aria-label="${esc(key)}">${options.map(([v, l]) => `<option value="${v}"${String(value) === String(v) ? " selected" : ""}>${l}</option>`).join("")}</select>`;
+  const numeric = (key, value, min = 0, max = 600) =>
+    `<div class="number-unit">${propInput(key, value, "number", `min="${min}" max="${max}"`)}<span>px</span></div>`;
+  const range = (key, value, min, max) =>
+    `<div class="range-row"><input type="range" data-prop="${key}" data-kind="number" min="${min}" max="${max}" value="${value}" aria-label="${key}"><span class="range-value">${value}${["opacity", "overlay"].includes(key) ? "%" : key === "gradientAngle" ? "°" : " px"}</span></div>`;
+  const section = (title, inner) =>
+    `<section class="inspector-section"><h3>${title}${icon("chevronDown")}</h3>${inner}</section>`;
+  function colorControl(
+    key,
+    value,
+    label,
+    setting = false,
+    fallback = "#ffffff",
+  ) {
+    return `<div class="color-field"><span>${label}</span><div class="color-input-wrap"><input type="color" ${setting ? "data-setting" : "data-prop"}="${key}" value="${color(value, fallback)}" aria-label="${label}"><span>${value || "AUTO"}</span>${!setting && value ? `<button class="color-clear" data-clear-prop="${key}" aria-label="Réinitialiser ${label}">×</button>` : ""}</div></div>`;
+  }
+  function alignControl(p) {
+    return `<div class="segment-control" role="group" aria-label="Alignement">${[
+      ["left", "alignLeft", "Gauche"],
+      ["center", "alignCenter", "Centré"],
+      ["right", "alignRight", "Droite"],
+    ]
+      .map(
+        ([v, i, l]) =>
+          `<button class="${p.align === v ? "active" : ""}" data-set-prop="align" data-value="${v}" aria-pressed="${p.align === v}" aria-label="${l}" title="${l}">${icon(i)}</button>`,
+      )
+      .join("")}</div>`;
+  }
+  function syncInspectorTabs() {
+    $$("[data-inspector-tab]").forEach((b) => {
+      const active = b.dataset.inspectorTab === inspectorTab;
+      b.classList.toggle("active", active);
+      b.setAttribute("aria-selected", String(active));
+    });
+  }
+  function renderInspector() {
+    syncInspectorTabs();
+    const el = $("#inspector-content");
+    if (inspectorTab === "page") {
+      renderPageInspector(el);
+      return;
+    }
+    const f = findBlock(selectedId);
+    if (!f) {
+      el.innerHTML = `<div class="empty-selection">${icon("mouse")}Chaque bloc a ses petits réglages.<br>Sélectionnez-en un dans votre page pour le personnaliser.</div>`;
+      return;
+    }
+    const b = f.block,
+      p = b.props,
+      t = TYPES[b.type];
+    let html = `<div class="selected-block-heading"><span class="selected-block-icon">${icon(t.icon)}</span><div><h2>${t.label}</h2><p>${t.desc}</p></div></div>`;
+    let inner = "";
+    if (["heading", "paragraph", "button", "quote", "list"].includes(b.type))
+      inner += field(
+        b.type === "button"
+          ? "Libellé du bouton"
+          : b.type === "list"
+            ? "Un élément par ligne"
+            : "Votre texte",
+        propArea(
+          "text",
+          p.text,
+          `rows="${b.type === "heading" ? 3 : b.type === "paragraph" ? 4 : 3}"`,
+        ),
+      );
+    if (b.type === "button")
+      inner +=
+        field(
+          "Lien de destination",
+          propInput(
+            "href",
+            p.href,
+            "text",
+            'placeholder="#contact ou https://…"',
+          ),
+        ) +
+        `<label class="checkbox-field"><input type="checkbox" data-prop="newTab" ${p.newTab ? "checked" : ""}>Ouvrir dans un nouvel onglet</label>`;
+    if (b.type === "quote")
+      inner += field("Auteur", propInput("author", p.author));
+    if (b.type === "list")
+      inner += `<label class="checkbox-field"><input type="checkbox" data-prop="ordered" ${p.ordered ? "checked" : ""}>Liste numérotée</label>`;
+    if (b.type === "image")
+      inner += `<img class="image-thumbnail" src="${esc(safeImage(p.src))}" alt="Aperçu de l’image sélectionnée"><label class="image-upload">${icon("upload")}Importer une image<input type="file" data-image-upload accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/avif" aria-label="Importer une image"></label>${field("Ou une URL d’image", propInput("src", p.src.startsWith("data:") ? "" : p.src, "text", 'placeholder="https://…"'), "Les fichiers importés sont intégrés au HTML. Une URL distante nécessite une connexion.")}${field("Texte alternatif", propArea("alt", p.alt, 'rows="2"'), "Décrivez l’image pour les lecteurs d’écran.")}${field("Légende (facultatif)", propInput("caption", p.caption))}`;
+    if (b.type === "navigation")
+      inner +=
+        field("Nom du site", propInput("brand", p.brand)) +
+        field(
+          "Liens de navigation",
+          propArea("text", p.text, 'rows="5"'),
+          "Un lien par ligne : Libellé|#ancre ou Libellé|https://…",
+        );
+    if (b.type === "card")
+      inner +=
+        field(
+          "Symbole",
+          propInput("symbol", p.symbol, "text", 'maxlength="8"'),
+        ) +
+        field("Titre", propInput("title", p.title)) +
+        field("Description", propArea("text", p.text));
+    if (b.type === "html")
+      inner += field(
+        "Balisage HTML",
+        `<textarea class="control code-control" data-prop="html" spellcheck="false" aria-label="Code HTML du bloc">${esc(p.html)}</textarea>`,
+        "Balisage simple uniquement. Les scripts, formulaires et éléments embarqués sont retirés de l’aperçu et de l’export.",
+      );
+    if (b.type === "section")
+      inner += `<p class="inspector-help" style="margin-top:0">Cette section contient ${b.children.length} bloc${b.children.length > 1 ? "s" : ""}. Glissez un bloc à l’intérieur pour la compléter.</p><button class="button button-ghost button-full button-small" data-inspector-action="add-inside" style="margin-top:12px">${icon("plus")}Ajouter un bloc à la section</button>`;
+    if (b.type === "columns")
+      inner +=
+        field(
+          "Nombre de colonnes",
+          `<div class="segment-control">${[1, 2, 3, 4].map((n) => `<button class="${p.count === n ? "active" : ""}" data-set-prop="count" data-value="${n}" data-kind="number" aria-label="${n} colonne${n > 1 ? "s" : ""}">${n}</button>`).join("")}</div>`,
+          "Les colonnes s’empilent automatiquement sur mobile.",
+        ) + field("Espace entre les colonnes", range("gap", p.gap, 0, 80));
+    if (b.type === "spacer")
+      inner += field("Hauteur", range("height", p.height, 4, 300));
+    if (b.type === "divider")
+      inner +=
+        field("Épaisseur", range("thickness", p.thickness, 1, 12)) +
+        field(
+          "Style de trait",
+          propSelect("style", p.style, [
+            ["solid", "Continu"],
+            ["dashed", "Tirets"],
+            ["dotted", "Pointillés"],
+          ]),
+        );
+    if (inner)
+      html += section(
+        ["section", "columns", "spacer", "divider"].includes(b.type)
+          ? "Mise en page"
+          : "Contenu",
+        inner,
+      );
+    if (["heading", "paragraph"].includes(b.type)) {
+      inner = "";
+      if (b.type === "heading")
+        inner += field(
+          "Niveau du titre",
+          `<div class="segment-control">${[1, 2, 3, 4, 5, 6].map((n) => `<button class="${p.level === n ? "active" : ""}" data-set-prop="level" data-value="${n}" data-kind="number" aria-label="Titre de niveau ${n}">H${n}</button>`).join("")}</div>`,
+        );
+      inner += `<div class="typography-controls">${field(
+        "Police",
+        propSelect("font", p.font, [
+          ["inherit", "Par défaut"],
+          ["sans", "Sans serif"],
+          ["serif", "Serif éditoriale"],
+          ["mono", "Monospace"],
+        ]),
+      )}${field("Taille", numeric("fontSize", p.fontSize, 8, 160))}</div><div class="format-row">${alignControl(p)}<div class="format-toggles"><button class="${p.bold ? "active" : ""}" data-toggle-prop="bold" aria-label="Gras" aria-pressed="${p.bold}"><b>B</b></button><button class="${p.italic ? "active" : ""}" data-toggle-prop="italic" aria-label="Italique" aria-pressed="${p.italic}"><i>I</i></button></div></div>`;
+      html += section("Typographie", inner);
+    } else if (["button", "image", "quote", "list", "card"].includes(b.type)) {
+      inner = "";
+      if (["button", "quote", "list"].includes(b.type))
+        inner += field(
+          "Taille du texte",
+          numeric("fontSize", p.fontSize, 10, 70),
+        );
+      if (b.type === "button")
+        inner += field(
+          "Style",
+          propSelect("variant", p.variant, [
+            ["filled", "Plein"],
+            ["outline", "Contour"],
+            ["text", "Lien simple"],
+          ]),
+        );
+      if (["image", "button", "card"].includes(b.type))
+        inner += field("Coins arrondis", range("radius", p.radius, 0, 60));
+      if (b.type === "image")
+        inner +=
+          field(
+            "Hauteur (0 = automatique)",
+            numeric("height", p.height, 0, 1000),
+          ) +
+          field(
+            "Ajustement",
+            propSelect("fit", p.fit, [
+              ["cover", "Remplir (recadrer)"],
+              ["contain", "Afficher en entier"],
+            ]),
+          );
+      inner += field("Alignement", alignControl(p));
+      html += section("Apparence", inner);
+    }
+    if (b.type !== "spacer")
+      html += section(
+        "Couleurs",
+        colorControl("color", p.color, "Texte", false, doc.settings.text) +
+          colorControl(
+            "background",
+            p.background,
+            "Arrière-plan",
+            false,
+            doc.settings.background,
+          ),
+      );
+    if (!["spacer", "divider"].includes(b.type))
+      html += section(
+        "Espacement",
+        `<div class="box-model"><div class="box-model-label">Espacement intérieur</div><div class="box-model-inner"><div>${propInput("paddingTop", p.paddingTop, "number", 'min="0" max="600"')}<span>Haut · px</span></div><div>${propInput("paddingBottom", p.paddingBottom, "number", 'min="0" max="600"')}<span>Bas · px</span></div></div></div><div class="field" style="margin-top:15px;margin-bottom:0"><label>Marge en bas</label>${range("marginBottom", p.marginBottom, 0, 120)}</div>`,
+      );
+    html += `<details class="inspector-section"><summary>Avancé</summary>${field("Ancre HTML", propInput("anchor", p.anchor, "text", 'placeholder="ex. contact"'), "Une ancre permet de créer un lien vers ce bloc : #contact.")}${field("Nom dans la structure", propInput("name", p.name, "text", 'placeholder="Facultatif"'))}${["heading", "paragraph"].includes(b.type) ? field("Largeur maximale (0 = auto)", numeric("maxWidth", p.maxWidth, 0, 1440)) : ""}<button class="button button-danger button-full button-small" data-block-action="delete">${icon("trash")}Supprimer ce bloc</button></details>`;
+    el.innerHTML = html;
+  }
+  const PALETTES = [
+    {
+      name: "Sauge",
+      accent: "#38654b",
+      background: "#faf9f6",
+      text: "#25332d",
+    },
+    {
+      name: "Encre",
+      accent: "#5654ba",
+      background: "#fbfaff",
+      text: "#2e2942",
+    },
+    {
+      name: "Terre",
+      accent: "#a5583c",
+      background: "#fff9f1",
+      text: "#43352f",
+    },
+    {
+      name: "Océan",
+      accent: "#247486",
+      background: "#f7fbfb",
+      text: "#233e46",
+    },
+    { name: "Nuit", accent: "#d7dfa4", background: "#293145", text: "#f0f0e4" },
+  ];
+  function renderPageInspector(el) {
+    const s = doc.settings;
+    const setting = (key, value, type = "text", extra = "") =>
+      `<input class="control" type="${type}" data-setting="${key}" value="${esc(value)}" aria-label="${key}" ${extra}>`;
+    el.innerHTML = `<div class="selected-block-heading"><span class="selected-block-icon">${icon("sliders")}</span><div><h2>Votre page, votre style.</h2><p>Les réglages qui donnent le ton.</p></div></div>${section("Informations", field("Titre de la page", `<input class="control" data-root-prop="title" value="${esc(doc.title)}" maxlength="80" aria-label="Titre de la page">`) + field("Description pour les moteurs de recherche", `<textarea class="control" data-root-prop="description" rows="3" maxlength="320" aria-label="Description de la page">${esc(doc.description)}</textarea>`))}${section("Palette", `<div class="palette-grid">${PALETTES.map((p, i) => `<button class="palette-button${s.accent === p.accent ? " active" : ""}" data-palette="${i}" title="${p.name}" aria-label="Palette ${p.name}"><span style="background:linear-gradient(135deg,${p.accent} 50%,${p.background} 50%)"></span></button>`).join("")}</div>${colorControl("accent", s.accent, "Accent", true)}${colorControl("text", s.text, "Texte", true)}${colorControl("background", s.background, "Fond de page", true)}`)}${section(
+      "Mise en page",
+      field(
+        "Police globale",
+        `<select class="control" data-setting="font" aria-label="Police globale">${[
+          ["sans", "Sans serif · système"],
+          ["serif", "Serif · Georgia"],
+          ["mono", "Monospace · système"],
+        ]
+          .map(
+            ([v, l]) =>
+              `<option value="${v}"${s.font === v ? " selected" : ""}>${l}</option>`,
+          )
+          .join("")}</select>`,
+      ) +
+        field(
+          "Largeur du contenu",
+          `<div class="number-unit">${setting("width", s.width, "number", 'min="600" max="1440"')}<span>px</span></div>`,
+          "Votre page s’adapte aussi aux écrans plus petits.",
+        ),
+    )}${section("Votre projet", `<button class="button button-light button-full button-small" data-inspector-action="save-project">${icon("download")}Télécharger le projet JSON</button><button class="button button-ghost button-full button-small" data-inspector-action="import-project" style="margin-top:9px">${icon("upload")}Importer un projet</button><p class="inspector-help">La sauvegarde automatique reste sur cet appareil. Le fichier JSON permet de reprendre l’édition ailleurs. Le fichier HTML est destiné à la publication.</p>`)}${section("Entièrement à vous", `<p class="inspector-help" style="margin-top:0">Sans compte, sans abonnement, sans traceur. Votre page est exportée avec son CSS, sans dépendance. Le code de bloclibre est disponible sous licence MIT.</p><button class="button button-ghost button-full button-small" data-inspector-action="about" style="margin-top:13px">${icon("info")}À propos de bloclibre</button>`)}`;
+  }
+  function updateProp(key, value, rebuildInspector = false) {
+    const f = findBlock(selectedId);
+    if (!f || !Object.hasOwn(f.block.props, key)) return;
+    if (key === "anchor")
+      value = String(value)
+        .replace(/[^a-z0-9_-]/gi, "")
+        .slice(0, 80);
+    if (
+      key === "target" &&
+      f.block.type === "countdown" &&
+      Number.isFinite(new Date(value).getTime())
+    )
+      value = new Date(value).toISOString();
+    if (
+      key === "count" &&
+      f.block.type === "columns" &&
+      flatten().length +
+        Math.max(
+          0,
+          clamp(Math.round(value), 1, 4, 2) - f.block.children.length,
+        ) >
+        400
+    ) {
+      toast("Limite de 400 blocs atteinte.", true);
+      return;
+    }
+    commit(
+      () => {
+        if (key === "count" && f.block.type === "columns") {
+          value = clamp(Math.round(value), 1, 4, 2);
+          while (f.block.children.length < value)
+            f.block.children.push(
+              block("section", { paddingTop: 0, paddingBottom: 0 }),
+            );
+          f.block.children = f.block.children.slice(0, value);
+        }
+        f.block.props[key] = value;
+      },
+      { key: `prop-${selectedId}-${key}`, inspector: rebuildInspector },
+    );
+  }
+  function onInspectorInput(event) {
+    const input = event.target;
+    if (input.matches("[data-image-upload]")) return;
+    let value =
+      input.type === "checkbox"
+        ? input.checked
+        : input.dataset.kind === "number" || input.type === "number"
+          ? Number(input.value)
+          : input.value;
+    if (input.dataset.prop) {
+      updateProp(input.dataset.prop, value);
+      const rangeLabel = input
+        .closest(".range-row")
+        ?.querySelector(".range-value");
+      if (rangeLabel)
+        rangeLabel.textContent = `${value}${["opacity", "overlay"].includes(input.dataset.prop) ? "%" : input.dataset.prop === "gradientAngle" ? "°" : " px"}`;
+    } else if (input.dataset.setting) {
+      const key = input.dataset.setting;
+      if (key === "width") value = clamp(value, 600, 1440, 1040);
+      if (["accent", "background", "text"].includes(key))
+        value = color(value, doc.settings[key]);
+      commit(
+        () => {
+          doc.settings[key] = value;
+        },
+        { key: `setting-${key}`, inspector: false },
+      );
+    } else if (input.dataset.rootProp) {
+      const key = input.dataset.rootProp;
+      commit(
+        () => {
+          doc[key] = String(value).slice(0, key === "title" ? 80 : 320);
+        },
+        { key: `root-${key}`, canvas: false, inspector: false },
+      );
+    }
+    if (input.type === "color") {
+      const label = input.closest(".color-input-wrap")?.querySelector("span");
+      if (label) label.textContent = value;
+    }
+  }
+  async function importImage(file) {
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp|gif|svg\+xml|avif)$/.test(file.type)) {
+      toast("Choisissez une image PNG, JPEG, WebP, GIF, SVG ou AVIF.", true);
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast("Cette image est trop volumineuse (10 Mo maximum).", true);
+      return;
+    }
+    const id = selectedId;
+    try {
+      const data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      // Redimensionnement natif des photos pour limiter le poids du projet.
+      const image = new Image();
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+        image.src = data;
+      });
+      let src = data;
+      if (file.type !== "image/gif" && file.type !== "image/svg+xml") {
+        const ratio = Math.min(
+          1,
+          1800 / Math.max(image.naturalWidth, image.naturalHeight),
+        );
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+        canvas
+          .getContext("2d")
+          .drawImage(image, 0, 0, canvas.width, canvas.height);
+        src = canvas.toDataURL("image/webp", 0.88);
+      }
+      const f = findBlock(id);
+      if (!f) return;
+      commit(
+        () => {
+          f.block.props.src = src;
+          f.block.props.alt = file.name
+            .replace(/\.[^.]+$/, "")
+            .replace(/[-_]/g, " ");
+        },
+        { delay: 0 },
+      );
+      toast("Image intégrée. Elle sera incluse dans le HTML.");
+    } catch (error) {
+      toast("Impossible de lire cette image. Essayez un autre fichier.", true);
+    }
+  }
+
+  // ── Export, import et téléchargements ─────────────────────────────────────
+  function download(content, filename, type = "text/plain;charset=utf-8") {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+  function saveProject() {
+    saveNow();
+    download(
+      JSON.stringify(snapshotProject(), null, 2),
+      `${slug(doc.title)}.bloclibre.json`,
+      "application/json;charset=utf-8",
+    );
+    toast("Projet téléchargé. Gardez ce fichier pour reprendre l’édition.");
+  }
+  function exportHtml(fragment = false) {
+    download(
+      htmlDocument(doc, false, fragment),
+      fragment ? "fragment.html" : "index.html",
+      "text/html;charset=utf-8",
+    );
+    toast(
+      fragment
+        ? "Fragment HTML et CSS téléchargé."
+        : "Votre page HTML est prête à être publiée.",
+    );
+  }
+  async function copyCode() {
+    const text = htmlDocument(doc, false, modalExportMode === "fragment");
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    } catch (error) {
+      const temp = document.createElement("textarea");
+      temp.value = text;
+      temp.style.cssText = "position:fixed;left:-9999px;top:0";
+      document.body.append(temp);
+      temp.select();
+      try {
+        copied = document.execCommand("copy");
+      } catch (e) {
+        /* fallback manuel */
+      }
+      temp.remove();
+    }
+    toast(
+      copied
+        ? "Code copié dans le presse-papiers."
+        : "Copie indisponible ici. Téléchargez le HTML ou sélectionnez le code.",
+      !copied,
+    );
+    if (copied) {
+      const btn = $("#copy-code");
+      if (btn) {
+        btn.innerHTML = `${icon("check")}Copié !`;
+        setTimeout(() => {
+          if (btn.isConnected) btn.innerHTML = `${icon("copy")}Copier le code`;
+        }, 2000);
+      }
+    }
+  }
+  async function readProjectFile(file) {
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) {
+      toast("Ce projet est trop volumineux (20 Mo maximum).", true);
+      return;
+    }
+    try {
+      const incoming = normalizeProject(JSON.parse(await file.text()));
+      openConfirm(
+        "Importer ce projet ?",
+        `Le projet « ${incoming.title} » remplacera la page affichée. Vous pourrez annuler l’opération avec Ctrl/Cmd + Z.`,
+        () => replaceProject(incoming, "Projet importé."),
+        "Importer le projet",
+      );
+    } catch (error) {
+      toast(
+        error instanceof SyntaxError
+          ? "Le fichier n’est pas un JSON valide. Importez un fichier .bloclibre.json."
+          : error.message,
+        true,
+      );
+    }
+  }
+  function replaceProject(next, message) {
+    commit(
+      () => {
+        doc = next;
+        selectedId =
+          flatten().find((b) => b.type === "heading")?.id ||
+          doc.blocks[0]?.id ||
+          null;
+      },
+      { delay: 0 },
+    );
+    inspectorTab = "block";
+    syncInspectorTabs();
+    renderInspector();
+    closeModal();
+    $("#canvas-scroll").scrollTop = 0;
+    toast(message, false, true);
+  }
+
+  // ── Fenêtres : code, aperçu responsive, modèles, raccourcis ────────────────
+  function modalShell(title, subtitle, ico, body, footer = "", cls = "") {
+    return `<div class="modal-backdrop"><section class="modal ${cls}" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1"><header class="modal-header"><div class="modal-heading"><span class="modal-heading-icon">${icon(ico)}</span><div><h2 id="modal-title">${title}</h2><p>${subtitle}</p></div></div><button class="icon-button" data-close-modal aria-label="Fermer la fenêtre">${icon("close")}</button></header>${body}${footer ? `<footer class="modal-footer">${footer}</footer>` : ""}</section></div>`;
+  }
+  function openModal(type) {
+    if (!modalState) previousFocus = document.activeElement;
+    modalState = type;
+    closePanels();
+    closeMenu();
+    if (type === "export") renderExportModal();
+    if (type === "preview") renderPreviewModal();
+    if (type === "templates") renderTemplatesModal();
+    if (type === "shortcuts") renderShortcutsModal();
+    if (type === "about") renderAboutModal();
+    requestAnimationFrame(() => $(".modal")?.focus());
+  }
+  function closeModal() {
+    $("#modal-root").innerHTML = "";
+    modalState = null;
+    confirmAction = null;
+    if (previousFocus?.isConnected) previousFocus.focus();
+  }
+  function renderExportModal() {
+    const output = htmlDocument(doc, false, modalExportMode === "fragment");
+    $("#modal-root").innerHTML = modalShell(
+      "De vos idées au code.",
+      "Un fichier propre, autonome et entièrement à vous.",
+      "code",
+      `<div class="export-tabs" role="tablist"><button class="${modalExportMode === "full" ? "active" : ""}" data-export-mode="full" role="tab" aria-selected="${modalExportMode === "full"}">Document complet</button><button class="${modalExportMode === "fragment" ? "active" : ""}" data-export-mode="fragment" role="tab" aria-selected="${modalExportMode === "fragment"}">Fragment + CSS</button><span class="export-file-name">${icon("code")}${modalExportMode === "full" ? "index.html" : "fragment.html"}</span></div><div class="code-status"><span>${icon("checkCircle")}HTML + CSS intégrés</span><span>${(new Blob([output]).size / 1024).toFixed(1)} Ko</span><span>Sans JavaScript · Sans dépendance</span></div><div class="code-wrap"><pre id="export-code" tabindex="0" aria-label="Code HTML à copier"></pre></div>`,
+      `<span class="modal-footer-note">${icon("unlock")}Publiez-le où vous voulez. Aucune attribution imposée sur vos pages.</span><button class="button button-light" id="copy-code">${icon("copy")}Copier le code</button><button class="button button-primary" data-download-html>${icon("download")}Télécharger .html</button>`,
+      "export-modal",
+    );
+    $("#export-code").textContent = output;
+  }
+  function renderPreviewModal() {
+    $("#modal-root").innerHTML =
+      `<div class="modal-backdrop"><section class="modal preview-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1"><header class="modal-header"><div class="modal-heading"><span class="modal-heading-icon">${icon("eye")}</span><div><h2 id="modal-title">Place au résultat.</h2><p>Votre site, sans les outils d’édition.</p></div></div><div class="preview-header-tools"><div class="device-switch" role="group" aria-label="Format de l’aperçu">${[
+        ["desktop", "desktop", "Ordinateur"],
+        ["tablet", "tablet", "Tablette"],
+        ["mobile", "smartphone", "Mobile"],
+      ]
+        .map(
+          ([d, i, l]) =>
+            `<button class="${previewDevice === d ? "active" : ""}" data-preview-device="${d}" aria-label="${l}" aria-pressed="${previewDevice === d}">${icon(i)}</button>`,
+        )
+        .join(
+          "",
+        )}</div><button class="button button-primary button-small" data-download-html>${icon("download")}Télécharger le HTML</button><button class="icon-button" data-close-modal aria-label="Fermer l’aperçu">${icon("close")}</button></div></header><div class="modal-body"><div class="preview-shell" id="preview-shell"><iframe id="preview-frame" sandbox="allow-same-origin" title="Aperçu du site exporté" referrerpolicy="no-referrer"></iframe></div></div></section></div>`;
+    $("#preview-frame").srcdoc = htmlDocument(doc);
+    setPreviewDevice(previewDevice);
+  }
+  function setPreviewDevice(d) {
+    previewDevice = d;
+    $("#preview-shell").style.width =
+      d === "desktop" ? "100%" : `${WIDTHS[d]}px`;
+    $$("#modal-root [data-preview-device]").forEach((b) => {
+      b.classList.toggle("active", b.dataset.previewDevice === d);
+      b.setAttribute("aria-pressed", String(b.dataset.previewDevice === d));
+    });
+  }
+  function renderTemplatesModal() {
+    const previews = [
+      {
+        id: "atelier",
+        title: "Atelier créatif",
+        desc: "Chaleureux, simple et singulier",
+        cls: "",
+        brand: "atelier.",
+        headline: "De belles idées.<br>De vrais projets.",
+      },
+      {
+        id: "portfolio",
+        title: "Portfolio indépendant",
+        desc: "Vos projets au premier plan",
+        cls: "portfolio",
+        brand: "alex. design",
+        headline: "Une autre<br>dimension.",
+      },
+      {
+        id: "launch",
+        title: "Lancement tout en douceur",
+        desc: "Une idée à faire découvrir",
+        cls: "launch",
+        brand: "morrow.",
+        headline: "Moins de bruit.<br>Plus d’essentiel.",
+      },
+    ];
+    $("#modal-root").innerHTML = modalShell(
+      "Une belle page commence ici.",
+      "Trois points de départ. Une infinité de possibilités.",
+      "sparkles",
+      `<div class="modal-body"><p class="templates-intro">Choisissez une base, puis faites-la vôtre. Chaque texte, couleur et image est modifiable dans l’éditeur.</p><div class="templates-grid">${previews.map((p) => `<button class="template-card" data-template="${p.id}"><div class="template-preview ${p.cls}" aria-hidden="true"><div class="mini-nav"><span>${p.brand}</span><span>— — —</span></div><div class="mini-eyebrow">UNE BELLE HISTOIRE À ÉCRIRE</div><div class="mini-title">${p.headline}</div><div class="mini-line"></div><div class="mini-line" style="width:40%"></div><div class="mini-button">Découvrir ↗</div><div class="mini-art"></div></div><div class="template-card-info"><div><h3>${p.title}</h3><p>${p.desc}</p></div>${icon("arrowRight")}</div></button>`).join("")}</div><button class="blank-template" data-template="blank">${icon("plus")}Ou partir d’une page blanche</button></div>`,
+      `<span class="modal-footer-note">${icon("checkCircle")}Illustrations originales incluses. Rien à installer, rien à payer.</span>`,
+      "templates-modal",
+    );
+  }
+  function renderShortcutsModal() {
+    const mac = /Mac|iPhone|iPad/.test(navigator.platform),
+      mod = mac ? "⌘" : "Ctrl";
+    const rows = [
+      ["Annuler", [mod, "Z"]],
+      ["Rétablir", [mod, "Maj", "Z"]],
+      ["Télécharger le projet", [mod, "S"]],
+      ["Ouvrir l’export HTML", [mod, "Maj", "E"]],
+      ["Dupliquer la sélection", [mod, "D"]],
+      ["Supprimer la sélection", ["Suppr"]],
+      ["Rechercher un bloc", ["/"]],
+      ["Fermer une fenêtre", ["Échap"]],
+    ];
+    $("#modal-root").innerHTML = modalShell(
+      "À portée de clavier.",
+      "Un peu moins de clics, un peu plus de création.",
+      "keyboard",
+      `<div class="modal-body">${rows.map(([label, keys]) => `<div class="shortcut-row"><span>${label}</span><span class="shortcut-keys">${keys.map((k) => `<kbd>${k}</kbd>`).join(" + ")}</span></div>`).join("")}<p class="inspector-help" style="margin-top:22px">Dupliquer, supprimer et rechercher s’appliquent hors des champs de texte. Annuler fonctionne aussi pendant l’édition.</p></div>`,
+      "",
+      "shortcuts-modal",
+    );
+  }
+  function renderAboutModal() {
+    $("#modal-root").innerHTML = modalShell(
+      "Libre de créer.",
+      "Un petit outil, de grandes possibilités.",
+      "heart",
+      `<div class="modal-body"><div class="about-logo"><span class="brand-symbol"><i></i><i></i><i></i><i></i></span>bloclibre.</div><p class="about-description">Composez votre page avec des blocs, ajustez les détails et emportez votre HTML. Sans abonnement, sans compte et sans renoncer à vos données.</p><div class="about-facts"><div>${icon("unlock")}<strong>100 % open source</strong>Code sous licence MIT</div><div>${icon("shield")}<strong>100 % local</strong>Pas de serveur, pas de traceur</div><div>${icon("code")}<strong>Zéro dépendance</strong>HTML, CSS, JavaScript natifs</div><div>${icon("globe")}<strong>Prêt pour le web</strong>HTML exporté autonome</div></div><p class="about-license">bloclibre v1.0 · Illustrations vectorielles originales incluses sous MIT.<br>Inspiré des éditeurs par blocs. Non affilié à WordPress.</p></div>`,
+      "",
+      "about-modal",
+    );
+  }
+  function openConfirm(title, message, action, label = "Continuer") {
+    if (!modalState) previousFocus = document.activeElement;
+    modalState = "confirm";
+    confirmAction = action;
+    $("#modal-root").innerHTML = modalShell(
+      esc(title),
+      "Votre travail reste récupérable dans l’historique.",
+      "folder",
+      `<div class="modal-body">${esc(message)}</div>`,
+      `<span class="modal-footer-note">${icon("info")}Pensez à garder une copie JSON.</span><button class="button button-light" data-close-modal>Annuler</button><button class="button button-primary" data-confirm>${esc(label)}</button>`,
+      "confirm-modal",
+    );
+    requestAnimationFrame(() => $(".modal")?.focus());
+  }
+
+  // ── Menus, panneaux responsive et raccourcis ──────────────────────────────
+  function closeMenu() {
+    $("#project-menu").hidden = true;
+    $("#project-menu-toggle").setAttribute("aria-expanded", "false");
+  }
+  function toggleMenu() {
+    const menu = $("#project-menu");
+    if (!menu.hidden) {
+      closeMenu();
+      return;
+    }
+    menu.innerHTML = `<button data-menu-action="new">${icon("plus")}Nouveau projet</button><button data-menu-action="templates">${icon("sparkles")}Choisir un modèle</button><hr><button data-menu-action="save">${icon("download")}Télécharger le projet<span class="menu-kbd">Ctrl S</span></button><button data-menu-action="import">${icon("upload")}Importer un projet JSON</button><hr><button data-menu-action="shortcuts">${icon("keyboard")}Raccourcis clavier</button><button data-menu-action="about">${icon("info")}À propos · Licence MIT</button>`;
+    menu.hidden = false;
+    $("#project-menu-toggle").setAttribute("aria-expanded", "true");
+  }
+  function closePanels() {
+    $("#left-sidebar").classList.remove("is-open");
+    $("#right-sidebar").classList.remove("is-open");
+    $("#panel-scrim").hidden = true;
+  }
+  function openPanel(which) {
+    closePanels();
+    $(`#${which === "left" ? "left" : "right"}-sidebar`).classList.add(
+      "is-open",
+    );
+    $("#panel-scrim").hidden = false;
+  }
+  function handleKeys(event) {
+    const mod = event.metaKey || event.ctrlKey,
+      key = event.key.toLowerCase();
+    const editable = event.target.closest?.(
+      'input,textarea,select,[contenteditable="true"]',
+    );
+    if (key === "escape") {
+      if (modalState) closeModal();
+      closeMenu();
+      closePanels();
+      return;
+    }
+    if (modalState) {
+      if (key === "tab") {
+        const focusable = $$(
+          'button:not(:disabled),[href],input,select,textarea,[tabindex="0"]',
+          $(".modal"),
+        );
+        if (!focusable.length) return;
+        const first = focusable[0],
+          last = focusable.at(-1);
+        if (
+          event.shiftKey &&
+          (document.activeElement === first ||
+            document.activeElement === $(".modal"))
+        ) {
+          event.preventDefault();
+          last.focus();
+        } else if (
+          !event.shiftKey &&
+          (document.activeElement === last ||
+            document.activeElement === $(".modal"))
+        ) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+      if (mod && key === "s") {
+        event.preventDefault();
+        saveProject();
+      }
+      return;
+    }
+    if (mod && key === "s") {
+      event.preventDefault();
+      saveProject();
+      return;
+    }
+    if (mod && key === "z") {
+      event.preventDefault();
+      travelHistory(event.shiftKey ? 1 : -1);
+      return;
+    }
+    if (mod && key === "y") {
+      event.preventDefault();
+      travelHistory(1);
+      return;
+    }
+    if (mod && event.shiftKey && key === "e") {
+      event.preventDefault();
+      openModal("export");
+      return;
+    }
+    if (editable) return;
+    if (mod && key === "d" && selectedId) {
+      event.preventDefault();
+      duplicateBlock();
+    }
+    if (!mod && (key === "delete" || key === "backspace") && selectedId) {
+      event.preventDefault();
+      deleteBlock();
+    }
+    if (!mod && key === "/") {
+      event.preventDefault();
+      changeSidebarTab("blocks");
+      if (matchMedia("(max-width:740px)").matches) openPanel("left");
+      $("#block-search")?.focus();
+    }
+  }
+
+  // ── Événements de l’interface ─────────────────────────────────────────────
+  $$("[data-icon]").forEach((el) => (el.innerHTML = icon(el.dataset.icon)));
+  $("#brand-home").addEventListener("click", (e) => {
+    e.preventDefault();
+    openModal("projects");
+  });
+  $("#undo-button").onclick = () => travelHistory(-1);
+  $("#redo-button").onclick = () => travelHistory(1);
+  $("#preview-button").onclick = () => openModal("preview");
+  $("#export-button").onclick = () => openModal("export");
+  $("#templates-button").onclick = () => openModal("templates");
+  $("#shortcuts-button").onclick = () => openModal("shortcuts");
+  $("#zoom-button").onclick = () => {
+    layoutCanvas();
+    toast("Le canevas est ajusté à l’espace disponible.");
+  };
+  $("#project-title").addEventListener("input", (e) =>
+    commit(
+      () => {
+        doc.title = e.target.value;
+      },
+      { key: "project-title", canvas: false, inspector: false },
+    ),
+  );
+  $("#project-title").addEventListener("blur", () => {
+    if (!doc.title.trim())
+      commit(
+        () => {
+          doc.title = "Sans titre";
+        },
+        { canvas: false },
+      );
+  });
+  $("#project-menu-toggle").onclick = toggleMenu;
+  $("#device-switch").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-device]");
+    if (b) setDevice(b.dataset.device);
+  });
+  $$(".sidebar-tab").forEach(
+    (b) => (b.onclick = () => changeSidebarTab(b.dataset.sidebarTab)),
+  );
+  $$("[data-inspector-tab]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        inspectorTab = b.dataset.inspectorTab;
+        renderInspector();
+      }),
+  );
+  $("#selection-toolbar").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-block-action]");
+    if (b) blockAction(b.dataset.blockAction);
+  });
+  $("#selection-toolbar").addEventListener("dragstart", (event) => {
+    if (!event.target.closest(".block-drag-handle") || !selectedId) return;
+    dragData = { source: "structure", id: selectedId };
+    event.dataTransfer.setData(MIME, JSON.stringify(dragData));
+    event.dataTransfer.setData("text/plain", JSON.stringify(dragData));
+    event.dataTransfer.effectAllowed = "move";
+  });
+  $("#selection-toolbar").addEventListener("dragend", () => {
+    dragData = null;
+    clearDrop();
+  });
+  $("#end-add-button").onclick = () => {
+    selectedId = null;
+    updateFrameSelection();
+    renderSelectionToolbar();
+    renderInspector();
+    changeSidebarTab("blocks");
+    if (matchMedia("(max-width:740px)").matches) openPanel("left");
+    $("#block-search").focus();
+    toast("Choisissez un bloc : il sera ajouté à la fin de la page.");
+  };
+  $("#open-left-panel").onclick = () => openPanel("left");
+  $("#close-left-panel").onclick = closePanels;
+  $("#open-inspector").onclick = () => openPanel("right");
+  $("#close-inspector").onclick = closePanels;
+  $("#panel-scrim").onclick = closePanels;
+  $("#library-content").addEventListener("click", (event) => {
+    const add = event.target.closest("[data-add-type]");
+    if (add) {
+      addBlock(add.dataset.addType);
+      return;
+    }
+    const filterBtn = event.target.closest("[data-filter]");
+    if (filterBtn) {
+      filter = filterBtn.dataset.filter;
+      renderLibrary();
+      return;
+    }
+    const del = event.target.closest("[data-delete-id]");
+    if (del) {
+      deleteBlock(del.dataset.deleteId);
+      return;
+    }
+    const row = event.target.closest("[data-tree-id]");
+    if (row) selectBlock(row.dataset.treeId, true);
+  });
+  $("#library-content").addEventListener("input", (event) => {
+    if (event.target.id !== "block-search") return;
+    search = event.target.value;
+    const pos = event.target.selectionStart;
+    renderLibrary();
+    const input = $("#block-search");
+    input.focus();
+    input.setSelectionRange(pos, pos);
+  });
+  $("#library-content").addEventListener("keydown", (event) => {
+    const row = event.target.closest("[data-tree-id]");
+    if (row && event.target === row && ["Enter", " "].includes(event.key)) {
+      event.preventDefault();
+      selectBlock(row.dataset.treeId, true);
+    }
+  });
+  $("#library-content").addEventListener("dragstart", (event) => {
+    const card = event.target.closest("[data-add-type]"),
+      row = event.target.closest("[data-tree-id]");
+    if (!card && !row) return;
+    dragData = card
+      ? { source: "library", type: card.dataset.addType }
+      : { source: "structure", id: row.dataset.treeId };
+    event.dataTransfer.setData(MIME, JSON.stringify(dragData));
+    event.dataTransfer.setData("text/plain", JSON.stringify(dragData));
+    event.dataTransfer.effectAllowed = card ? "copy" : "move";
+  });
+  $("#library-content").addEventListener("dragend", () => {
+    dragData = null;
+    clearDrop();
+  });
+  $("#library-content").addEventListener("dragover", (event) => {
+    const row = event.target.closest("[data-tree-id]");
+    if (!row || !dragData) return;
+    event.preventDefault();
+    clearDrop();
+    const f = findBlock(row.dataset.treeId);
+    if (!f) return;
+    const after =
+      event.clientY > row.getBoundingClientRect().top + row.offsetHeight / 2;
+    row.classList.add(after ? "drop-after" : "drop-before");
+    dropTarget = { parentId: f.parentId, index: f.index + (after ? 1 : 0) };
+  });
+  $("#library-content").addEventListener("drop", (event) => {
+    const data = readDrag(event),
+      target = dropTarget;
+    if (!data || !target) return;
+    event.preventDefault();
+    clearDrop();
+    dragData = null;
+    if (data.source === "library") addBlock(data.type, target);
+    else moveTo(data.id, target);
+  });
+  $("#inspector-content").addEventListener("input", onInspectorInput);
+  $("#inspector-content").addEventListener("change", (event) => {
+    if (event.target.matches("[data-image-upload]"))
+      importImage(event.target.files[0]);
+    // Certains navigateurs ne déclenchent que change pour les sélecteurs.
+    else if (event.target.matches('select,[type="checkbox"]'))
+      onInspectorInput(event);
+  });
+  $("#inspector-content").addEventListener("click", (event) => {
+    const set = event.target.closest("[data-set-prop]");
+    if (set) {
+      updateProp(
+        set.dataset.setProp,
+        set.dataset.kind === "number"
+          ? Number(set.dataset.value)
+          : set.dataset.value,
+        true,
+      );
+      return;
+    }
+    const toggle = event.target.closest("[data-toggle-prop]");
+    if (toggle) {
+      const p = findBlock(selectedId)?.block.props;
+      if (p)
+        updateProp(
+          toggle.dataset.toggleProp,
+          !p[toggle.dataset.toggleProp],
+          true,
+        );
+      return;
+    }
+    const clear = event.target.closest("[data-clear-prop]");
+    if (clear) {
+      updateProp(clear.dataset.clearProp, "", true);
+      return;
+    }
+    const palette = event.target.closest("[data-palette]");
+    if (palette) {
+      const p = PALETTES[Number(palette.dataset.palette)];
+      commit(() =>
+        Object.assign(doc.settings, {
+          accent: p.accent,
+          background: p.background,
+          text: p.text,
+        }),
+      );
+      return;
+    }
+    const action = event.target.closest("[data-block-action]");
+    if (action) {
+      blockAction(action.dataset.blockAction);
+      return;
+    }
+    const a = event.target.closest("[data-inspector-action]")?.dataset
+      .inspectorAction;
+    if (a === "save-project") saveProject();
+    if (a === "import-project") $("#project-file-input").click();
+    if (a === "about") openModal("about");
+    if (a === "add-inside") {
+      changeSidebarTab("blocks");
+      if (matchMedia("(max-width:740px)").matches) openPanel("left");
+      $("#block-search")?.focus();
+      toast("Choisissez un bloc pour l’ajouter à cette section.");
+    }
+  });
+  $("#project-menu").addEventListener("click", (event) => {
+    const action =
+      event.target.closest("[data-menu-action]")?.dataset.menuAction;
+    if (!action) return;
+    closeMenu();
+    if (action === "save") saveProject();
+    if (action === "import") $("#project-file-input").click();
+    if (["templates", "shortcuts", "about"].includes(action)) openModal(action);
+    if (action === "new") openModal("templates");
+  });
+  $("#project-file-input").addEventListener("change", (event) => {
+    readProjectFile(event.target.files[0]);
+    event.target.value = "";
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".project-heading")) closeMenu();
+  });
+  $("#modal-root").addEventListener("click", (event) => {
+    if (
+      event.target.classList.contains("modal-backdrop") ||
+      event.target.closest("[data-close-modal]")
+    ) {
+      closeModal();
+      return;
+    }
+    if (event.target.closest("[data-download-html]")) {
+      exportHtml(modalState === "export" && modalExportMode === "fragment");
+      return;
+    }
+    if (event.target.closest("#copy-code")) {
+      copyCode();
+      return;
+    }
+    const mode = event.target.closest("[data-export-mode]");
+    if (mode) {
+      modalExportMode = mode.dataset.exportMode;
+      renderExportModal();
+      return;
+    }
+    const preview = event.target.closest("[data-preview-device]");
+    if (preview) {
+      setPreviewDevice(preview.dataset.previewDevice);
+      return;
+    }
+    const template = event.target.closest("[data-template]");
+    if (template) {
+      const name = template.dataset.template;
+      createFromTemplate(name);
+      return;
+    }
+    if (event.target.closest("[data-confirm]")) {
+      const action = confirmAction;
+      confirmAction = null;
+      action?.();
+    }
+  });
+  document.addEventListener("keydown", handleKeys);
+  window.addEventListener("beforeunload", (event) => {
+    clearTimeout(saveTimer);
+    if (!studioReady) return;
+    const data = deepClone(snapshotProject());
+    data.updatedAt = Date.now();
+    const checkpoint = saveCheckpoint(data);
+    if (!checkpoint && studioHasUnsaved) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    saveNow();
+  });
+  window.addEventListener("resize", () => {
+    layoutCanvas();
+    if (matchMedia("(min-width:1051px)").matches) closePanels();
+  });
+  new ResizeObserver(layoutCanvas).observe($("#canvas-scroll"));
+
+  // ── Démarrage ─────────────────────────────────────────────────────────────
+  updateMeta();
+  historyControls();
+  renderLibrary();
+  renderInspector();
+  renderSelectionToolbar();
+  setDevice(device);
+  renderCanvas();
+  initStudio();
+  if (loadWarning) setTimeout(() => toast(loadWarning, true), 800);
+})();
