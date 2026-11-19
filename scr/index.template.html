@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="fr">
+  <!--
+bloclibre — Éditeur de pages par blocs.
+MIT License
+
+Copyright (c) 2026 bloclibre contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Un éditeur de sites par blocs, gratuit et open source. Créez votre page et exportez son HTML, sans compte ni dépendance."
+    />
+    <meta name="theme-color" content="#25634c" />
+    <title>bloclibre — vos idées, votre site.</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%2325634c'/%3E%3Cpath d='M10 10h9v9h-9zm11 0h9v9h-9zM10 21h9v9h-9zm11 0h9v9h-9z' fill='%23e3f2d4'/%3E%3C/svg%3E"
+    />
+    <style>
+      /* APP_CSS */
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <header class="app-header">
+        <a
+          class="brand"
+          href="#"
+          id="brand-home"
+          aria-label="bloclibre, à propos"
+        >
+          <span class="brand-symbol" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i
+          ></span>
+          <span class="brand-word">bloclibre<span>.</span></span>
+        </a>
+        <span class="header-divider"></span>
+        <div class="project-heading">
+          <label class="sr-only" for="project-title">Nom du projet</label>
+          <input
+            id="project-title"
+            value="Mon premier site"
+            maxlength="80"
+            spellcheck="false"
+          />
+          <button
+            class="icon-button"
+            id="project-menu-toggle"
+            aria-label="Menu du projet"
+            aria-expanded="false"
+            data-icon="chevronDown"
+          ></button>
+          <div class="project-menu dropdown" id="project-menu" hidden></div>
+        </div>
+        <span class="save-status" id="save-status" role="status"
+          ><i></i><span>Enregistré en local</span></span
+        >
+        <div class="header-actions">
+          <div class="history-buttons">
+            <button
+              class="icon-button"
+              id="undo-button"
+              title="Annuler (Ctrl/Cmd + Z)"
+              aria-label="Annuler"
+              data-icon="undo"
+              disabled
+            ></button>
+            <button
+              class="icon-button"
+              id="redo-button"
+              title="Rétablir (Ctrl/Cmd + Maj + Z)"
+              aria-label="Rétablir"
+              data-icon="redo"
+              disabled
+            ></button>
+          </div>
+          <span class="header-divider actions-divider"></span>
+          <button
+            class="button button-light preview-button"
+            id="preview-button"
+          >
+            <span data-icon="eye"></span><span>Aperçu</span>
+          </button>
+          <button class="button button-primary" id="export-button">
+            <span data-icon="code"></span
+            ><span>Exporter<span class="export-html"> le HTML</span></span>
+          </button>
+        </div>
+      </header>
+
+      <main class="editor-layout">
+        <aside
+          class="left-sidebar"
+          id="left-sidebar"
+          aria-label="Bibliothèque de blocs"
+        >
+          <div
+            class="sidebar-tabs"
+            role="tablist"
+            aria-label="Outils de construction"
+          >
+            <button
+              class="sidebar-tab active"
+              id="blocks-tab"
+              role="tab"
+              aria-selected="true"
+              data-sidebar-tab="blocks"
+            >
+              <span data-icon="plus"></span>Blocs
+            </button>
+            <button
+              class="sidebar-tab"
+              id="structure-tab"
+              role="tab"
+              aria-selected="false"
+              data-sidebar-tab="structure"
+            >
+              <span data-icon="layers"></span>Structure
+            </button>
+            <button
+              class="icon-button close-panel"
+              id="close-left-panel"
+              aria-label="Fermer les blocs"
+              data-icon="close"
+            ></button>
+          </div>
+          <div class="library-content" id="library-content"></div>
+          <div class="sidebar-bottom">
+            <button class="template-promo" id="templates-button">
+              <span class="promo-icon" data-icon="sparkles"></span>
+              <span
+                ><strong>Une longueur d’avance</strong
+                ><small>Partez d’un modèle prêt à créer</small></span
+              >
+              <span data-icon="arrowRight"></span>
+            </button>
+            <span class="open-source-note"
+              ><span data-icon="unlock"></span>Gratuit. Libre. Et sans
+              compte.</span
+            >
+          </div>
+        </aside>
+
+        <section class="workspace" aria-label="Éditeur visuel">
+          <div class="workspace-bar">
+            <div class="workspace-location">
+              <button
+                class="icon-button mobile-add"
+                id="open-left-panel"
+                aria-label="Afficher les blocs"
+                data-icon="panelLeft"
+              ></button>
+              <span class="page-tag">PAGE</span><strong>Accueil</strong
+              ><span class="workspace-location-dot">·</span
+              ><span class="draft-label">Brouillon local</span>
+            </div>
+            <div
+              class="device-switch"
+              id="device-switch"
+              role="group"
+              aria-label="Taille de l’aperçu"
+            >
+              <button
+                class="active"
+                data-device="desktop"
+                title="Ordinateur · 1120 px"
+                aria-label="Ordinateur"
+                aria-pressed="true"
+                data-icon="desktop"
+              ></button>
+              <button
+                data-device="tablet"
+                title="Tablette · 768 px"
+                aria-label="Tablette"
+                aria-pressed="false"
+                data-icon="tablet"
+              ></button>
+              <button
+                data-device="mobile"
+                title="Mobile · 390 px"
+                aria-label="Mobile"
+                aria-pressed="false"
+                data-icon="smartphone"
+              ></button>
+            </div>
+            <div class="workspace-tools">
+              <button
+                class="zoom-button"
+                id="zoom-button"
+                title="Ajustement automatique"
+                aria-label="Ajuster le zoom"
+              >
+                <span id="zoom-value">100 %</span><span data-icon="fit"></span>
+              </button>
+              <button
+                class="icon-button inspector-toggle"
+                id="open-inspector"
+                title="Réglages"
+                aria-label="Afficher les réglages"
+                data-icon="sliders"
+              ></button>
+            </div>
+          </div>
+          <div class="canvas-scroll" id="canvas-scroll">
+            <div class="canvas-intro">
+              <span class="canvas-document-name"
+                ><span class="tiny-dot"></span
+                ><span id="canvas-title">Mon premier site</span></span
+              ><span id="canvas-dimensions">1120 px</span>
+            </div>
+            <div
+              class="selection-toolbar"
+              id="selection-toolbar"
+              aria-label="Actions du bloc"
+            ></div>
+            <div class="canvas-frame-wrap" id="canvas-frame-wrap">
+              <iframe
+                id="editor-frame"
+                title="Votre page, zone d’édition"
+                sandbox="allow-same-origin"
+                referrerpolicy="no-referrer"
+              ></iframe>
+            </div>
+            <button class="end-add-button" id="end-add-button">
+              <span data-icon="plus"></span>Ajouter un bloc
+            </button>
+            <div class="canvas-footnote">
+              <span data-icon="mouse"></span>Cliquez pour sélectionner · Écrivez
+              directement dans les textes
+            </div>
+          </div>
+          <footer class="workspace-footer">
+            <span
+              ><span class="footer-dot"></span>Vos idées restent à vous.</span
+            ><button id="shortcuts-button">
+              <span data-icon="keyboard"></span><span>Raccourcis</span></button
+            ><span id="block-count">0 bloc</span>
+          </footer>
+        </section>
+
+        <aside class="right-sidebar" id="right-sidebar" aria-label="Réglages">
+          <div
+            class="inspector-tabs"
+            role="tablist"
+            aria-label="Réglages de la sélection"
+          >
+            <button
+              class="active"
+              role="tab"
+              aria-selected="true"
+              data-inspector-tab="block"
+            >
+              Bloc
+            </button>
+            <button role="tab" aria-selected="false" data-inspector-tab="page">
+              Page
+            </button>
+            <button
+              class="icon-button close-panel"
+              id="close-inspector"
+              aria-label="Fermer les réglages"
+              data-icon="close"
+            ></button>
+          </div>
+          <div class="inspector-content" id="inspector-content"></div>
+          <div class="inspector-footer">
+            <span data-icon="shield"></span>Aucune donnée envoyée. Jamais.
+          </div>
+        </aside>
+      </main>
+    </div>
+    <div class="panel-scrim" id="panel-scrim" hidden></div>
+    <div id="modal-root"></div>
+    <div
+      class="toast-container"
+      id="toasts"
+      aria-live="polite"
+      aria-atomic="false"
+    ></div>
+    <input
+      type="file"
+      id="project-file-input"
+      accept=".json,application/json"
+      hidden
+    />
+    <noscript
+      ><div class="noscript-message">
+        bloclibre a besoin de JavaScript pour l’édition. Les pages que vous
+        exportez fonctionnent sans JavaScript.
+      </div></noscript
+    >
+    <script>
+      /* APP_JS */
+    </script>
+  </body>
+</html>
