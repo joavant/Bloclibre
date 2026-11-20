@@ -1,4 +1,4 @@
-# Votre premier site avec bloclibre Studio
+# Votre premier site avec [bloclibre Studio](https://joavant.github.io/Bloclibre/)
 
 ## Les trois fichiers à ne pas confondre
 
