@@ -48,46 +48,24 @@ Chaque modèle crée un nouveau projet. Les textes, noms et chiffres de démonst
 
 ## Démarrer
 
-1. Téléchargez le dépôt avec **Code → Download ZIP**, puis décompressez-le.
-2. Ouvrez **`index.html`** dans un navigateur récent.
-3. Choisissez un modèle ou une page blanche.
-4. Ajoutez vos blocs, textes, images et liens.
-5. Vérifiez les différents formats dans **Aperçu**.
-6. Utilisez **Exporter le site → Site complet .zip** pour préparer la publication.
-
-L’application est déjà assemblée : **aucune installation ni compilation n’est nécessaire pour l’utiliser**. Conservez `communaute.html` et `bloclibre.config.js` à côté d’`index.html` pour disposer aussi de la page publique Idées & soutien et de sa configuration.
-
-Vous préférez un serveur local ? Depuis le dossier du projet :
-
-```sh
-python3 -m http.server 8000
-```
-
-Ouvrez ensuite `http://localhost:8000`.
+1. Cliquer sur le [lien]().
+2. Choisissez un modèle ou une page blanche.
+3. Ajoutez vos blocs, textes, images et liens.
+4. Vérifiez les différents formats dans **Aperçu**.
+5. Utilisez **Exporter le site → Site complet .zip** pour préparer la publication.
 
 > [!IMPORTANT]
 > Les projets sont enregistrés sur votre navigateur, pas dans un cloud. **Ctrl / Cmd + S** télécharge une sauvegarde JSON : gardez-en une copie hors du navigateur.
-
-## Publier sur GitHub Pages
-
-### Héberger le constructeur
-
-1. Placez les fichiers du projet à la racine de votre dépôt, notamment `index.html`, `communaute.html`, `bloclibre.config.js`, `.nojekyll` et `LICENSE`.
-2. Ouvrez **Settings → Pages**.
-3. Choisissez **Deploy from a branch**, votre branche — par exemple `main` — et **`/ (root)`**.
-4. Attendez la publication, puis ouvrez l’adresse indiquée par GitHub.
-
-Un [workflow manuel facultatif](.github/workflows/pages.yml) est également fourni pour publier avec GitHub Actions. Pour cette méthode, choisissez **GitHub Actions** comme source Pages, puis lancez **Publier bloclibre Studio** dans l’onglet Actions. Utilisez une seule méthode de déploiement à la fois.
 
 ### Publier un site créé avec bloclibre
 
 1. Dans le studio, exportez **Site complet .zip**.
 2. Décompressez cette archive.
 3. Déposez son contenu dans le dépôt destiné à votre site, en conservant le dossier `assets/` et les noms de fichiers.
-4. Activez GitHub Pages sur ce dépôt et vérifiez le résultat en ligne.
+4. Activez GitHub Pages ou autre hebergeur et vérifiez le résultat en ligne.
 
 > [!NOTE]
-> Le `index.html` de ce dépôt est le **constructeur**. Celui du ZIP exporté est **votre site final**. Utilisez deux dépôts ou deux dossiers distincts pour garder les deux en ligne.
+> Le `index.html` de ce dépôt est le **constructeur**. Celui du ZIP exporté est **votre site final**.
 
 ## Sauvegardes et exports
 
@@ -109,8 +87,6 @@ Chaque site affiche par défaut **son vrai nom** et la mention **« Créé avec 
 
 Le nom du projet se modifie dans l’en-tête ou dans les réglages du thème. Il est repris sur les pages et dans les exports, sans être confondu avec le titre SEO d’une page.
 
-Le studio et la page Idées & soutien créditent **[Joavant](https://joavant.github.io/portfolio/)**. Aucun crédit visible n’est imposé sur les sites créés.
-
 ## Idées, retours et contributions
 
 **Les idées de fonctionnalités sont la priorité.** Si quelque chose vous manque, ouvrez une issue dans l’onglet **Issues** de ce dépôt.
@@ -131,50 +107,16 @@ La page `communaute.html` permet de préparer une demande GitHub. Le visiteur do
 
 Le dépôt peut être détecté sur `github.io` ou renseigné manuellement. L’existence du dépôt et l’activation d’Issues restent à vérifier par son propriétaire.
 
-Le soutien financier est facultatif et **désactivé tant qu’aucun véritable lien de don n’est configuré**. Il n’existe aucun paiement intégré au studio : un éventuel don est traité par la plateforme externe choisie.
+Le soutien financier est facultatif. Il n’existe aucun paiement intégré au studio : un éventuel don est traité par la plateforme externe choisie.
 
 Les destinations publiques se règlent dans **Configurer mon installation** ou dans `bloclibre.config.js`, sans recompilation. Le portfolio du créateur, l’adresse du constructeur, le dépôt des idées et le lien de don sont des champs distincts.
 
-**Ne placez aucun mot de passe, token ou clé API dans ce fichier public.** Pour tous les détails, consultez le [guide communauté](COMMUNAUTE.md).
+**Ne placez aucun mot de passe, token ou clé API dans ce fichier public.**.
 
 ## Développement
 
 Le projet utilise du **HTML, du CSS et du JavaScript natifs**. Les fichiers publics sont déjà générés ; les outils suivants ne sont nécessaires que pour modifier les sources ou lancer les tests.
 
-### Reconstruire l’application
-
-Avec Python 3, après modification de `src/` :
-
-```sh
-python3 build.py
-```
-
-Cette commande reconstruit `index.html` et `communaute.html`. La configuration publique `bloclibre.config.js` est conservée. Modifiez les sources plutôt que les seuls fichiers générés.
-
-### Lancer les tests
-
-Prérequis : **Python 3, Node.js 20+ et npm**.
-
-```sh
-npm install
-npx playwright install chromium
-```
-
-Démarrez le serveur dans un premier terminal :
-
-```sh
-npm start
-```
-
-Puis lancez les tests dans un second :
-
-```sh
-npm test
-```
-
-Sous Linux, les dépendances système de Chromium peuvent aussi nécessiter `npx playwright install-deps chromium`.
-
-La suite vérifie l’assemblage et les principaux parcours avec Playwright. Les navigations de test vers les destinations externes sont interceptées : aucune issue ni aucun paiement n’est créé. Les dépendances npm sont uniquement des outils de développement, jamais des bibliothèques chargées par l’application.
 
 ## Limites à connaître
 
@@ -183,13 +125,8 @@ La suite vérifie l’assemblage et les principaux parcours avec Playwright. Les
 - **Sauvegarde locale** : vider les données du navigateur, changer d’appareil ou utiliser la navigation privée peut faire perdre l’accès aux projets locaux. Conservez vos JSON.
 - **Ressources distantes** : les images et vidéos ajoutées par URL restent dépendantes de leur hébergement et de leurs droits d’utilisation.
 - **Contenu personnalisé** : le HTML libre est filtré. L’audit intégré est une aide, pas une certification de sécurité, de référencement ou d’accessibilité.
-- **Navigateurs** : les vérifications automatisées ont été réalisées sous Chromium. Le périmètre détaillé figure dans [VALIDATION.md](VALIDATION.md).
+- **Navigateurs** : les vérifications automatisées ont été réalisées sous Chromium.
 
-## Documentation
-
-- [Premiers pas : portfolio et hackathon](DEMARRAGE.md)
-- [Nom du site, configuration du créateur, idées et soutien](COMMUNAUTE.md)
-- [Périmètre de validation et limites des tests](VALIDATION.md)
 
 ## Licence
 
