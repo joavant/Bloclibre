@@ -48,7 +48,7 @@ Chaque modèle crée un nouveau projet. Les textes, noms et chiffres de démonst
 
 ## Démarrer
 
-1. Cliquer sur le [lien]().
+1. Cliquer sur le [lien](https://joavant.github.io/Bloclibre/).
 2. Choisissez un modèle ou une page blanche.
 3. Ajoutez vos blocs, textes, images et liens.
 4. Vérifiez les différents formats dans **Aperçu**.
